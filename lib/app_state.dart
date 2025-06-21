@@ -953,7 +953,19 @@ class FFAppState extends ChangeNotifier {
   String get loginToken => _loginToken;
   set loginToken(String value) {
     _loginToken = value;
-    prefs.setString('ff_loginToken', value);
+    _saveLoginToken(value);
+    notifyListeners();
+  }
+
+  Future<void> _saveLoginToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('loginToken', token);
+  }
+
+  Future<void> loadLoginToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    _loginToken = prefs.getString('loginToken') ?? '';
+    notifyListeners();
   }
 
   String _rewardedInterstitialAndroidId =
@@ -1470,6 +1482,22 @@ class FFAppState extends ChangeNotifier {
   void clearSelfChalangeCache() => _selfChalangeManager.clear();
   void clearSelfChalangeCacheKey(String? uniqueKey) =>
       _selfChalangeManager.clearRequest(uniqueKey);
+
+  Map<String, dynamic>? _userData;
+  bool _isLoggedIn = false;
+
+  Map<String, dynamic>? get userData => _userData;
+  bool get isLoggedIn => _isLoggedIn;
+
+  set userData(Map<String, dynamic>? value) {
+    _userData = value;
+    notifyListeners();
+  }
+
+  set isLoggedIn(bool value) {
+    _isLoggedIn = value;
+    notifyListeners();
+  }
 }
 
 void _safeInit(Function() initializeField) {

@@ -55,3 +55,6 @@ temp/
 
 # Yarn Integrity file
 .yarn-integrity
+
+# Android build files
+android/app/.cxx/

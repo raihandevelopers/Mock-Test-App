@@ -482,7 +482,7 @@ class _UserVerificationScreenWidgetState
                                       .override(
                                         fontFamily: 'Roboto',
                                         color:
-                                            FlutterFlowTheme.of(context).black,
+                                            FlutterFlowTheme.of(context).white,
                                         fontSize: 18.0,
                                         letterSpacing: 0.0,
                                         fontWeight: FontWeight.w600,

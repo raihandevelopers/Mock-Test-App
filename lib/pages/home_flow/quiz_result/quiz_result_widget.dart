@@ -149,7 +149,7 @@ class _QuizResultWidgetState extends State<QuizResultWidget> {
                               padding: EdgeInsetsDirectional.fromSTEB(
                                   0.0, 16.0, 0.0, 33.0),
                               child: Text(
-                                'You have completed quiz \nsuccessfully',
+                                'You have completed Test \nsuccessfully',
                                 textAlign: TextAlign.center,
                                 style: FlutterFlowTheme.of(context)
                                     .bodyMedium
@@ -954,7 +954,7 @@ class _QuizResultWidgetState extends State<QuizResultWidget> {
                                                         QuizReviewScreenWidget
                                                             .routeName);
                                                   },
-                                                  text: 'Quiz overview ',
+                                                  text: 'Test overview ',
                                                   options: FFButtonOptions(
                                                     height: 56.0,
                                                     padding:

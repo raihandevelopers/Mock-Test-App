@@ -9,6 +9,7 @@ import '/main.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 
 import '/index.dart';
+import '/pages/category_flow/category_viewall/current_affairs_widget.dart';
 
 export 'package:go_router/go_router.dart';
 export 'serialization_util.dart';
@@ -130,6 +131,13 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               : CategoryViewallWidget(),
         ),
         FFRoute(
+          name: CurrentAffairsWidget.routeName,
+          path: CurrentAffairsWidget.routePath,
+          builder: (context, params) => params.isEmpty
+              ? NavBarPage(initialPage: 'current_affairs')
+              : CurrentAffairsWidget(),
+        ),
+        FFRoute(
           name: CategoryDetailPageWidget.routeName,
           path: CategoryDetailPageWidget.routePath,
           builder: (context, params) => CategoryDetailPageWidget(
@@ -214,11 +222,6 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               ParamType.String,
             ),
           ),
-        ),
-        FFRoute(
-          name: BuyPointsScreenWidget.routeName,
-          path: BuyPointsScreenWidget.routePath,
-          builder: (context, params) => BuyPointsScreenWidget(),
         ),
         FFRoute(
           name: PaymentScreenWidget.routeName,

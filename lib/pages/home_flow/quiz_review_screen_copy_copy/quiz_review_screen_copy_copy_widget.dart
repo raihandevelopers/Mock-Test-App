@@ -66,7 +66,7 @@ class _QuizReviewScreenCopyCopyWidgetState
               model: _model.appBarModel,
               updateCallback: () => safeSetState(() {}),
               child: AppBarWidget(
-                title: 'Quiz overview',
+                title: 'Test overview',
                 backIcon: false,
               ),
             ),

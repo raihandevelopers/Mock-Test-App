@@ -66,7 +66,7 @@ class _CompletedquizzesWidgetState extends State<CompletedquizzesWidget> {
                 Padding(
                   padding: EdgeInsetsDirectional.fromSTEB(0.0, 26.0, 0.0, 0.0),
                   child: Text(
-                    'No completed quizzes yet',
+                    'No completed Tests yet',
                     style: FlutterFlowTheme.of(context).bodyMedium.override(
                           fontFamily: 'Roboto',
                           fontSize: 24.0,
@@ -80,7 +80,7 @@ class _CompletedquizzesWidgetState extends State<CompletedquizzesWidget> {
                 Padding(
                   padding: EdgeInsetsDirectional.fromSTEB(0.0, 22.0, 0.0, 0.0),
                   child: Text(
-                    'Your completed quizzes list is empty please wait for some time and go to home ',
+                    'Your completed Tests list is empty please wait for some time and go to home ',
                     textAlign: TextAlign.center,
                     style: FlutterFlowTheme.of(context).bodyMedium.override(
                           fontFamily: 'Roboto',

@@ -1,0 +1,2 @@
+/Users/raihankhan/Downloads/Quiz App and Backend/Mock-Test-App/android/app/.cxx/RelWithDebInfo/4j45396s/x86_64/CMakeFiles/edit_cache.dir
+/Users/raihankhan/Downloads/Quiz App and Backend/Mock-Test-App/android/app/.cxx/RelWithDebInfo/4j45396s/x86_64/CMakeFiles/rebuild_cache.dir

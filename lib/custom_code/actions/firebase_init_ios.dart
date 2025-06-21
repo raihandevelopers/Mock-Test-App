@@ -9,26 +9,14 @@ import 'package:flutter/material.dart';
 // Begin custom action code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
-import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 
-Future<void> firebaseInitIos() async {
-  // Add your function code here!
-  final FirebaseMessaging messaging = FirebaseMessaging.instance;
-
-  NotificationSettings settings = await messaging.requestPermission(
-    alert: true,
-    announcement: false,
-    badge: true,
-    sound: true,
-  );
-
-  if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-    print('User granted permission');
-    String? token = await messaging.getToken();
-    FFAppState().tokenFcm = token!;
-
-    print('FCM Token: $token');
-  } else {
-    print('User declined or has not accepted permission');
+Future<void> initializeFirebaseIOS() async {
+  try {
+    await Firebase.initializeApp();
+    debugPrint('Firebase initialized successfully on iOS');
+  } catch (e) {
+    debugPrint('Error initializing Firebase on iOS: $e');
   }
 }

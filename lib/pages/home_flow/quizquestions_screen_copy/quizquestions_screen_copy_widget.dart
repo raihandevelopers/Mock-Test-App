@@ -125,6 +125,7 @@ class _QuizquestionsScreenCopyWidgetState
                                   hoverColor: Colors.transparent,
                                   highlightColor: Colors.transparent,
                                   onTap: () async {
+                                    if (_model.pageViewCurrentIndex == 0) {
                                     await showDialog(
                                       context: context,
                                       builder: (dialogContext) {
@@ -132,16 +133,11 @@ class _QuizquestionsScreenCopyWidgetState
                                           elevation: 0,
                                           insetPadding: EdgeInsets.zero,
                                           backgroundColor: Colors.transparent,
-                                          alignment: AlignmentDirectional(
-                                                  0.0, 0.0)
-                                              .resolve(
-                                                  Directionality.of(context)),
+                                            alignment: AlignmentDirectional(0.0, 0.0).resolve(Directionality.of(context)),
                                           child: GestureDetector(
                                             onTap: () {
-                                              FocusScope.of(dialogContext)
-                                                  .unfocus();
-                                              FocusManager.instance.primaryFocus
-                                                  ?.unfocus();
+                                                FocusScope.of(dialogContext).unfocus();
+                                                FocusManager.instance.primaryFocus?.unfocus();
                                             },
                                             child: Container(
                                               height: 352.0,
@@ -158,20 +154,28 @@ class _QuizquestionsScreenCopyWidgetState
                                     safeSetState(() {});
                                     FFAppState().wrongQues = 0;
                                     safeSetState(() {});
+                                    } else {
+                                      await _model.pageViewController?.previousPage(
+                                        duration: Duration(milliseconds: 300),
+                                        curve: Curves.ease,
+                                      );
+                                      FFAppState().quesIndex = _model.pageViewCurrentIndex;
+                                      safeSetState(() {});
+                                    }
                                   },
                                   child: Container(
                                     width: 40.0,
                                     height: 40.0,
                                     decoration: BoxDecoration(
-                                      color: FlutterFlowTheme.of(context)
-                                          .lightGrey,
+                                      color: FlutterFlowTheme.of(context).lightGrey,
                                       shape: BoxShape.circle,
                                     ),
                                     alignment: AlignmentDirectional(0.0, 0.0),
                                     child: Icon(
-                                      Icons.close_sharp,
-                                      color: FlutterFlowTheme.of(context)
-                                          .primaryText,
+                                      _model.pageViewCurrentIndex == 0
+                                        ? Icons.close_sharp
+                                        : Icons.arrow_back_ios_new_rounded,
+                                      color: FlutterFlowTheme.of(context).primaryText,
                                       size: 24.0,
                                     ),
                                   ),
@@ -642,122 +646,61 @@ class _QuizquestionsScreenCopyWidgetState
 
                                           return Container(
                                             width: double.infinity,
-                                            child: Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(
-                                                      0.0, 0.0, 0.0, 40.0),
+                                            child: Stack(
+                                              children: [
+                                                Padding(
+                                                  padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 40.0),
                                               child: PageView.builder(
-                                                physics:
-                                                    const NeverScrollableScrollPhysics(),
-                                                controller: _model
-                                                        .pageViewController ??=
-                                                    PageController(
-                                                        initialPage: max(
-                                                            0,
-                                                            min(
-                                                                0,
-                                                                categorywisequiz
-                                                                        .length -
-                                                                    1))),
+                                                    physics: const NeverScrollableScrollPhysics(),
+                                                    controller: _model.pageViewController ??= PageController(
+                                                      initialPage: max(0, min(0, categorywisequiz.length - 1))
+                                                    ),
                                                 onPageChanged: (_) async {
-                                                  FFAppState().questionType =
-                                                      getJsonField(
-                                                    categorywisequiz
-                                                        .elementAtOrNull(_model
-                                                            .pageViewCurrentIndex),
+                                                      FFAppState().questionType = getJsonField(
+                                                        categorywisequiz.elementAtOrNull(_model.pageViewCurrentIndex),
                                                     r'''$.question_type''',
                                                   ).toString();
                                                   safeSetState(() {});
                                                 },
-                                                scrollDirection:
-                                                    Axis.horizontal,
-                                                itemCount:
-                                                    categorywisequiz.length,
-                                                itemBuilder: (context,
-                                                    categorywisequizIndex) {
-                                                  final categorywisequizItem =
-                                                      categorywisequiz[
-                                                          categorywisequizIndex];
+                                                    scrollDirection: Axis.horizontal,
+                                                    itemCount: categorywisequiz.length,
+                                                    itemBuilder: (context, categorywisequizIndex) {
+                                                      final categorywisequizItem = categorywisequiz[categorywisequizIndex];
                                                   return Builder(
                                                     builder: (context) {
-                                                      if (FFAppState()
-                                                              .questionType ==
-                                                          'text_only') {
+                                                          if (FFAppState().questionType == 'text_only') {
                                                         return Padding(
-                                                          padding:
-                                                              EdgeInsetsDirectional
-                                                                  .fromSTEB(
-                                                                      16.0,
-                                                                      50.0,
-                                                                      16.0,
-                                                                      20.0),
+                                                              padding: EdgeInsetsDirectional.fromSTEB(16.0, 50.0, 16.0, 20.0),
                                                           child: Container(
-                                                            width:
-                                                                double.infinity,
+                                                                width: double.infinity,
                                                             height: 50.0,
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .secondaryBackground,
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          16.0),
+                                                                decoration: BoxDecoration(
+                                                                  color: FlutterFlowTheme.of(context).secondaryBackground,
+                                                                  borderRadius: BorderRadius.circular(16.0),
                                                             ),
-                                                            alignment:
-                                                                AlignmentDirectional(
-                                                                    0.0, -1.0),
+                                                                alignment: AlignmentDirectional(0.0, -1.0),
                                                             child: ListView(
-                                                              padding:
-                                                                  EdgeInsets
-                                                                      .fromLTRB(
-                                                                0,
-                                                                24.0,
-                                                                0,
-                                                                24.0,
-                                                              ),
+                                                                  padding: EdgeInsets.fromLTRB(0, 24.0, 0, 24.0),
                                                               shrinkWrap: true,
-                                                              scrollDirection:
-                                                                  Axis.vertical,
+                                                                  scrollDirection: Axis.vertical,
                                                               children: [
                                                                 Align(
-                                                                  alignment:
-                                                                      AlignmentDirectional(
-                                                                          -1.0,
-                                                                          0.0),
-                                                                  child:
-                                                                      Padding(
-                                                                    padding: EdgeInsetsDirectional
-                                                                        .fromSTEB(
-                                                                            0.0,
-                                                                            0.0,
-                                                                            0.0,
-                                                                            24.0),
+                                                                      alignment: AlignmentDirectional(-1.0, 0.0),
+                                                                      child: Padding(
+                                                                        padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 24.0),
                                                                     child: Text(
                                                                       getJsonField(
                                                                         categorywisequizItem,
                                                                         r'''$.question_title''',
                                                                       ).toString(),
-                                                                      textAlign:
-                                                                          TextAlign
-                                                                              .start,
-                                                                      style: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .override(
-                                                                            fontFamily:
-                                                                                'Roboto',
-                                                                            fontSize:
-                                                                                18.0,
-                                                                            letterSpacing:
-                                                                                0.0,
-                                                                            fontWeight:
-                                                                                FontWeight.w600,
-                                                                            useGoogleFonts:
-                                                                                false,
-                                                                            lineHeight:
-                                                                                1.2,
+                                                                          textAlign: TextAlign.start,
+                                                                          style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                                                            fontFamily: 'Roboto',
+                                                                            fontSize: 18.0,
+                                                                            letterSpacing: 0.0,
+                                                                            fontWeight: FontWeight.w600,
+                                                                            useGoogleFonts: false,
+                                                                            lineHeight: 1.2,
                                                                           ),
                                                                     ),
                                                                   ),
@@ -1163,1216 +1106,49 @@ class _QuizquestionsScreenCopyWidgetState
                                                             ),
                                                           ),
                                                         );
-                                                      } else if (FFAppState()
-                                                              .questionType ==
-                                                          'true_false') {
-                                                        return Padding(
-                                                          padding:
-                                                              EdgeInsetsDirectional
-                                                                  .fromSTEB(
-                                                                      16.0,
-                                                                      50.0,
-                                                                      16.0,
-                                                                      20.0),
-                                                          child: Container(
-                                                            width:
-                                                                double.infinity,
-                                                            height: 50.0,
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .secondaryBackground,
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          16.0),
-                                                            ),
-                                                            alignment:
-                                                                AlignmentDirectional(
-                                                                    0.0, -1.0),
-                                                            child: ListView(
-                                                              padding:
-                                                                  EdgeInsets
-                                                                      .fromLTRB(
-                                                                0,
-                                                                24.0,
-                                                                0,
-                                                                24.0,
-                                                              ),
-                                                              primary: false,
-                                                              scrollDirection:
-                                                                  Axis.vertical,
-                                                              children: [
-                                                                Align(
-                                                                  alignment:
-                                                                      AlignmentDirectional(
-                                                                          -1.0,
-                                                                          0.0),
-                                                                  child:
-                                                                      Padding(
-                                                                    padding: EdgeInsetsDirectional
-                                                                        .fromSTEB(
-                                                                            0.0,
-                                                                            0.0,
-                                                                            0.0,
-                                                                            24.0),
-                                                                    child: Text(
-                                                                      getJsonField(
-                                                                        categorywisequizItem,
-                                                                        r'''$.question_title''',
-                                                                      ).toString(),
-                                                                      textAlign:
-                                                                          TextAlign
-                                                                              .start,
-                                                                      style: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .override(
-                                                                            fontFamily:
-                                                                                'Roboto',
-                                                                            fontSize:
-                                                                                18.0,
-                                                                            letterSpacing:
-                                                                                0.0,
-                                                                            fontWeight:
-                                                                                FontWeight.w600,
-                                                                            useGoogleFonts:
-                                                                                false,
-                                                                            lineHeight:
-                                                                                1.2,
-                                                                          ),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                                Padding(
-                                                                  padding: EdgeInsetsDirectional
-                                                                      .fromSTEB(
-                                                                          0.0,
-                                                                          0.0,
-                                                                          0.0,
-                                                                          16.0),
-                                                                  child:
-                                                                      InkWell(
-                                                                    splashColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    focusColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    hoverColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    highlightColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    onTap:
-                                                                        () async {
-                                                                      _model.userAnswer =
-                                                                          'True';
-                                                                      _model.actualAnswer =
-                                                                          getJsonField(
-                                                                        categorywisequizItem,
-                                                                        r'''$.answer''',
-                                                                      ).toString();
-                                                                      safeSetState(
-                                                                          () {});
-                                                                      FFAppState()
-                                                                          .buttonColor = FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .primary;
-                                                                      FFAppState()
-                                                                          .buttonColor1 = FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .grey;
-                                                                      FFAppState()
-                                                                          .update(
-                                                                              () {});
-                                                                    },
-                                                                    child:
-                                                                        Container(
-                                                                      width:
-                                                                          369.0,
-                                                                      decoration:
-                                                                          BoxDecoration(
-                                                                        color: valueOrDefault<
-                                                                            Color>(
-                                                                          FFAppState()
-                                                                              .buttonColor,
-                                                                          FlutterFlowTheme.of(context)
-                                                                              .grey,
-                                                                        ),
-                                                                        borderRadius:
-                                                                            BorderRadius.circular(12.0),
-                                                                      ),
-                                                                      alignment:
-                                                                          AlignmentDirectional(
-                                                                              0.0,
-                                                                              0.0),
-                                                                      child:
-                                                                          Align(
-                                                                        alignment: AlignmentDirectional(
-                                                                            0.0,
-                                                                            0.0),
-                                                                        child:
-                                                                            Padding(
-                                                                          padding:
-                                                                              EdgeInsets.all(16.0),
-                                                                          child:
-                                                                              Text(
-                                                                            'True',
-                                                                            style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                  fontFamily: 'Roboto',
-                                                                                  fontSize: 18.0,
-                                                                                  letterSpacing: 0.0,
-                                                                                  fontWeight: FontWeight.normal,
-                                                                                  useGoogleFonts: false,
-                                                                                  lineHeight: 1.5,
-                                                                                ),
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                                Padding(
-                                                                  padding: EdgeInsetsDirectional
-                                                                      .fromSTEB(
-                                                                          0.0,
-                                                                          0.0,
-                                                                          0.0,
-                                                                          16.0),
-                                                                  child:
-                                                                      InkWell(
-                                                                    splashColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    focusColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    hoverColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    highlightColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    onTap:
-                                                                        () async {
-                                                                      _model.userAnswer =
-                                                                          'False';
-                                                                      _model.actualAnswer =
-                                                                          getJsonField(
-                                                                        categorywisequizItem,
-                                                                        r'''$.answer''',
-                                                                      ).toString();
-                                                                      safeSetState(
-                                                                          () {});
-                                                                      FFAppState()
-                                                                          .buttonColor = FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .grey;
-                                                                      FFAppState()
-                                                                          .buttonColor1 = FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .primary;
-                                                                      FFAppState()
-                                                                          .update(
-                                                                              () {});
-                                                                    },
-                                                                    child:
-                                                                        Container(
-                                                                      width:
-                                                                          369.0,
-                                                                      decoration:
-                                                                          BoxDecoration(
-                                                                        color: valueOrDefault<
-                                                                            Color>(
-                                                                          FFAppState()
-                                                                              .buttonColor1,
-                                                                          FlutterFlowTheme.of(context)
-                                                                              .grey,
-                                                                        ),
-                                                                        borderRadius:
-                                                                            BorderRadius.circular(12.0),
-                                                                      ),
-                                                                      child:
-                                                                          Align(
-                                                                        alignment: AlignmentDirectional(
-                                                                            0.0,
-                                                                            0.0),
-                                                                        child:
-                                                                            Padding(
-                                                                          padding:
-                                                                              EdgeInsets.all(16.0),
-                                                                          child:
-                                                                              Text(
-                                                                            'False',
-                                                                            style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                  fontFamily: 'Roboto',
-                                                                                  fontSize: 18.0,
-                                                                                  letterSpacing: 0.0,
-                                                                                  fontWeight: FontWeight.normal,
-                                                                                  useGoogleFonts: false,
-                                                                                  lineHeight: 1.5,
-                                                                                ),
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        );
-                                                      } else if (FFAppState()
-                                                              .questionType ==
-                                                          'images') {
-                                                        return Padding(
-                                                          padding:
-                                                              EdgeInsetsDirectional
-                                                                  .fromSTEB(
-                                                                      16.0,
-                                                                      50.0,
-                                                                      16.0,
-                                                                      20.0),
-                                                          child: Container(
-                                                            width:
-                                                                double.infinity,
-                                                            height: 50.0,
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .secondaryBackground,
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          16.0),
-                                                            ),
-                                                            alignment:
-                                                                AlignmentDirectional(
-                                                                    0.0, -1.0),
-                                                            child: ListView(
-                                                              padding:
-                                                                  EdgeInsets
-                                                                      .fromLTRB(
-                                                                0,
-                                                                24.0,
-                                                                0,
-                                                                24.0,
-                                                              ),
-                                                              shrinkWrap: true,
-                                                              scrollDirection:
-                                                                  Axis.vertical,
-                                                              children: [
-                                                                ClipRRect(
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              8.0),
-                                                                  child: Image
-                                                                      .network(
-                                                                    'https://images.unsplash.com/photo-1472457974886-0ebcd59440cc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NTYyMDF8MHwxfHNlYXJjaHwyfHxsZWdvfGVufDB8fHx8MTcyNTUyNTYwMnww&ixlib=rb-4.0.3&q=80&w=1080',
-                                                                    width:
-                                                                        200.0,
-                                                                    height:
-                                                                        200.0,
-                                                                    fit: BoxFit
-                                                                        .cover,
-                                                                  ),
-                                                                ),
-                                                                Align(
-                                                                  alignment:
-                                                                      AlignmentDirectional(
-                                                                          -1.0,
-                                                                          0.0),
-                                                                  child:
-                                                                      Padding(
-                                                                    padding: EdgeInsetsDirectional
-                                                                        .fromSTEB(
-                                                                            0.0,
-                                                                            20.0,
-                                                                            0.0,
-                                                                            24.0),
-                                                                    child: Text(
-                                                                      getJsonField(
-                                                                        categorywisequizItem,
-                                                                        r'''$.question_title''',
-                                                                      ).toString(),
-                                                                      textAlign:
-                                                                          TextAlign
-                                                                              .start,
-                                                                      style: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .override(
-                                                                            fontFamily:
-                                                                                'Roboto',
-                                                                            fontSize:
-                                                                                18.0,
-                                                                            letterSpacing:
-                                                                                0.0,
-                                                                            fontWeight:
-                                                                                FontWeight.w600,
-                                                                            useGoogleFonts:
-                                                                                false,
-                                                                            lineHeight:
-                                                                                1.2,
-                                                                          ),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                                Row(
-                                                                  mainAxisSize:
-                                                                      MainAxisSize
-                                                                          .min,
-                                                                  mainAxisAlignment:
-                                                                      MainAxisAlignment
-                                                                          .spaceBetween,
-                                                                  children: [
-                                                                    Expanded(
-                                                                      child:
-                                                                          InkWell(
-                                                                        splashColor:
-                                                                            Colors.transparent,
-                                                                        focusColor:
-                                                                            Colors.transparent,
-                                                                        hoverColor:
-                                                                            Colors.transparent,
-                                                                        highlightColor:
-                                                                            Colors.transparent,
-                                                                        onTap:
-                                                                            () async {
-                                                                          _model.userAnswer =
-                                                                              getJsonField(
-                                                                            categorywisequizItem,
-                                                                            r'''$.option.a''',
-                                                                          ).toString();
-                                                                          _model.actualAnswer =
-                                                                              getJsonField(
-                                                                            categorywisequizItem,
-                                                                            r'''$.answer''',
-                                                                          ).toString();
-                                                                          safeSetState(
-                                                                              () {});
-                                                                          FFAppState().selectedColorIndex =
-                                                                              0;
-                                                                          FFAppState()
-                                                                              .update(() {});
-                                                                        },
-                                                                        child:
-                                                                            Container(
-                                                                          decoration:
-                                                                              BoxDecoration(
-                                                                            color: FFAppState().selectedColorIndex == 0
-                                                                                ? FlutterFlowTheme.of(context).primary
-                                                                                : FlutterFlowTheme.of(context).grey,
-                                                                            borderRadius:
-                                                                                BorderRadius.circular(12.0),
-                                                                          ),
-                                                                          alignment: AlignmentDirectional(
-                                                                              0.0,
-                                                                              0.0),
-                                                                          child:
-                                                                              Align(
-                                                                            alignment:
-                                                                                AlignmentDirectional(0.0, 0.0),
-                                                                            child:
-                                                                                Padding(
-                                                                              padding: EdgeInsets.all(16.0),
-                                                                              child: Text(
-                                                                                getJsonField(
-                                                                                  categorywisequizItem,
-                                                                                  r'''$.option.a''',
-                                                                                ).toString(),
-                                                                                style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                      fontFamily: 'Roboto',
-                                                                                      fontSize: 18.0,
-                                                                                      letterSpacing: 0.0,
-                                                                                      fontWeight: FontWeight.normal,
-                                                                                      useGoogleFonts: false,
-                                                                                      lineHeight: 1.5,
-                                                                                    ),
-                                                                              ),
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ),
-                                                                    Expanded(
-                                                                      child:
-                                                                          InkWell(
-                                                                        splashColor:
-                                                                            Colors.transparent,
-                                                                        focusColor:
-                                                                            Colors.transparent,
-                                                                        hoverColor:
-                                                                            Colors.transparent,
-                                                                        highlightColor:
-                                                                            Colors.transparent,
-                                                                        onTap:
-                                                                            () async {
-                                                                          _model.userAnswer =
-                                                                              getJsonField(
-                                                                            categorywisequizItem,
-                                                                            r'''$.option.b''',
-                                                                          ).toString();
-                                                                          _model.actualAnswer =
-                                                                              getJsonField(
-                                                                            categorywisequizItem,
-                                                                            r'''$.answer''',
-                                                                          ).toString();
-                                                                          safeSetState(
-                                                                              () {});
-                                                                          FFAppState().selectedColorIndex =
-                                                                              1;
-                                                                          FFAppState()
-                                                                              .update(() {});
-                                                                        },
-                                                                        child:
-                                                                            Container(
-                                                                          decoration:
-                                                                              BoxDecoration(
-                                                                            color: FFAppState().selectedColorIndex == 1
-                                                                                ? FlutterFlowTheme.of(context).primary
-                                                                                : FlutterFlowTheme.of(context).grey,
-                                                                            borderRadius:
-                                                                                BorderRadius.circular(12.0),
-                                                                          ),
-                                                                          child:
-                                                                              Align(
-                                                                            alignment:
-                                                                                AlignmentDirectional(0.0, 0.0),
-                                                                            child:
-                                                                                Padding(
-                                                                              padding: EdgeInsets.all(16.0),
-                                                                              child: Text(
-                                                                                getJsonField(
-                                                                                  categorywisequizItem,
-                                                                                  r'''$.option.b''',
-                                                                                ).toString(),
-                                                                                style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                      fontFamily: 'Roboto',
-                                                                                      fontSize: 18.0,
-                                                                                      letterSpacing: 0.0,
-                                                                                      fontWeight: FontWeight.normal,
-                                                                                      useGoogleFonts: false,
-                                                                                      lineHeight: 1.5,
-                                                                                    ),
-                                                                              ),
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ),
-                                                                  ].divide(SizedBox(
-                                                                      width:
-                                                                          16.0)),
-                                                                ),
-                                                                Padding(
-                                                                  padding: EdgeInsetsDirectional
-                                                                      .fromSTEB(
-                                                                          0.0,
-                                                                          16.0,
-                                                                          0.0,
-                                                                          0.0),
-                                                                  child: Row(
-                                                                    mainAxisSize:
-                                                                        MainAxisSize
-                                                                            .min,
-                                                                    mainAxisAlignment:
-                                                                        MainAxisAlignment
-                                                                            .spaceBetween,
-                                                                    children: [
-                                                                      Expanded(
-                                                                        child:
-                                                                            InkWell(
-                                                                          splashColor:
-                                                                              Colors.transparent,
-                                                                          focusColor:
-                                                                              Colors.transparent,
-                                                                          hoverColor:
-                                                                              Colors.transparent,
-                                                                          highlightColor:
-                                                                              Colors.transparent,
-                                                                          onTap:
-                                                                              () async {
-                                                                            _model.userAnswer =
-                                                                                getJsonField(
-                                                                              categorywisequizItem,
-                                                                              r'''$.option.c''',
-                                                                            ).toString();
-                                                                            _model.actualAnswer =
-                                                                                getJsonField(
-                                                                              categorywisequizItem,
-                                                                              r'''$.answer''',
-                                                                            ).toString();
-                                                                            safeSetState(() {});
-                                                                            FFAppState().selectedColorIndex =
-                                                                                2;
-                                                                            FFAppState().update(() {});
-                                                                          },
-                                                                          child:
-                                                                              Container(
-                                                                            decoration:
-                                                                                BoxDecoration(
-                                                                              color: FFAppState().selectedColorIndex == 2 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
-                                                                              borderRadius: BorderRadius.circular(12.0),
-                                                                            ),
-                                                                            alignment:
-                                                                                AlignmentDirectional(0.0, 0.0),
-                                                                            child:
-                                                                                Align(
-                                                                              alignment: AlignmentDirectional(0.0, 0.0),
-                                                                              child: Padding(
-                                                                                padding: EdgeInsets.all(16.0),
-                                                                                child: Text(
-                                                                                  getJsonField(
-                                                                                    categorywisequizItem,
-                                                                                    r'''$.option.c''',
-                                                                                  ).toString(),
-                                                                                  style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                        fontFamily: 'Roboto',
-                                                                                        fontSize: 18.0,
-                                                                                        letterSpacing: 0.0,
-                                                                                        fontWeight: FontWeight.normal,
-                                                                                        useGoogleFonts: false,
-                                                                                        lineHeight: 1.5,
-                                                                                      ),
-                                                                                ),
-                                                                              ),
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                      Expanded(
-                                                                        child:
-                                                                            InkWell(
-                                                                          splashColor:
-                                                                              Colors.transparent,
-                                                                          focusColor:
-                                                                              Colors.transparent,
-                                                                          hoverColor:
-                                                                              Colors.transparent,
-                                                                          highlightColor:
-                                                                              Colors.transparent,
-                                                                          onTap:
-                                                                              () async {
-                                                                            _model.userAnswer =
-                                                                                getJsonField(
-                                                                              categorywisequizItem,
-                                                                              r'''$.option.d''',
-                                                                            ).toString();
-                                                                            _model.actualAnswer =
-                                                                                getJsonField(
-                                                                              categorywisequizItem,
-                                                                              r'''$.answer''',
-                                                                            ).toString();
-                                                                            safeSetState(() {});
-                                                                            FFAppState().selectedColorIndex =
-                                                                                3;
-                                                                            FFAppState().update(() {});
-                                                                          },
-                                                                          child:
-                                                                              Container(
-                                                                            decoration:
-                                                                                BoxDecoration(
-                                                                              color: FFAppState().selectedColorIndex == 3 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
-                                                                              borderRadius: BorderRadius.circular(12.0),
-                                                                            ),
-                                                                            child:
-                                                                                Align(
-                                                                              alignment: AlignmentDirectional(0.0, 0.0),
-                                                                              child: Padding(
-                                                                                padding: EdgeInsets.all(16.0),
-                                                                                child: Text(
-                                                                                  getJsonField(
-                                                                                    categorywisequizItem,
-                                                                                    r'''$.option.d''',
-                                                                                  ).toString(),
-                                                                                  style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                        fontFamily: 'Roboto',
-                                                                                        fontSize: 18.0,
-                                                                                        letterSpacing: 0.0,
-                                                                                        fontWeight: FontWeight.normal,
-                                                                                        useGoogleFonts: false,
-                                                                                        lineHeight: 1.5,
-                                                                                      ),
-                                                                                ),
-                                                                              ),
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ].divide(SizedBox(
-                                                                        width:
-                                                                            16.0)),
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        );
-                                                      } else if (FFAppState()
-                                                              .questionType ==
-                                                          'audio') {
-                                                        return Padding(
-                                                          padding:
-                                                              EdgeInsetsDirectional
-                                                                  .fromSTEB(
-                                                                      16.0,
-                                                                      50.0,
-                                                                      16.0,
-                                                                      20.0),
-                                                          child: Container(
-                                                            width:
-                                                                double.infinity,
-                                                            height: 50.0,
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: FlutterFlowTheme
-                                                                      .of(context)
-                                                                  .secondaryBackground,
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          16.0),
-                                                            ),
-                                                            alignment:
-                                                                AlignmentDirectional(
-                                                                    0.0, -1.0),
-                                                            child: ListView(
-                                                              padding:
-                                                                  EdgeInsets
-                                                                      .fromLTRB(
-                                                                0,
-                                                                24.0,
-                                                                0,
-                                                                24.0,
-                                                              ),
-                                                              primary: false,
-                                                              scrollDirection:
-                                                                  Axis.vertical,
-                                                              children: [
-                                                                Align(
-                                                                  alignment:
-                                                                      AlignmentDirectional(
-                                                                          -1.0,
-                                                                          0.0),
-                                                                  child:
-                                                                      Padding(
-                                                                    padding: EdgeInsetsDirectional
-                                                                        .fromSTEB(
-                                                                            0.0,
-                                                                            0.0,
-                                                                            0.0,
-                                                                            24.0),
-                                                                    child: Text(
-                                                                      getJsonField(
-                                                                        categorywisequizItem,
-                                                                        r'''$.question_title''',
-                                                                      ).toString(),
-                                                                      textAlign:
-                                                                          TextAlign
-                                                                              .start,
-                                                                      style: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .bodyMedium
-                                                                          .override(
-                                                                            fontFamily:
-                                                                                'Roboto',
-                                                                            fontSize:
-                                                                                18.0,
-                                                                            letterSpacing:
-                                                                                0.0,
-                                                                            fontWeight:
-                                                                                FontWeight.w600,
-                                                                            useGoogleFonts:
-                                                                                false,
-                                                                            lineHeight:
-                                                                                1.2,
-                                                                          ),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                                Padding(
-                                                                  padding: EdgeInsetsDirectional
-                                                                      .fromSTEB(
-                                                                          0.0,
-                                                                          0.0,
-                                                                          0.0,
-                                                                          24.0),
-                                                                  child:
-                                                                      FlutterFlowAudioPlayer(
-                                                                    audio: Audio
-                                                                        .network(
-                                                                      'https://filesamples.com/samples/audio/mp3/sample3.mp3',
-                                                                      metas:
-                                                                          Metas(
-                                                                        id: 'sample3.mp3-7a628486',
-                                                                        title:
-                                                                            'Audio',
-                                                                      ),
-                                                                    ),
-                                                                    titleTextStyle: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .titleLarge
-                                                                        .override(
-                                                                          fontFamily:
-                                                                              'Roboto',
-                                                                          letterSpacing:
-                                                                              0.0,
-                                                                          useGoogleFonts:
-                                                                              false,
-                                                                        ),
-                                                                    playbackDurationTextStyle: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .labelMedium
-                                                                        .override(
-                                                                          fontFamily:
-                                                                              'Roboto',
-                                                                          letterSpacing:
-                                                                              0.0,
-                                                                          useGoogleFonts:
-                                                                              false,
-                                                                        ),
-                                                                    fillColor: FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .secondaryBackground,
-                                                                    playbackButtonColor:
-                                                                        FlutterFlowTheme.of(context)
-                                                                            .primary,
-                                                                    activeTrackColor:
-                                                                        FlutterFlowTheme.of(context)
-                                                                            .primary,
-                                                                    inactiveTrackColor:
-                                                                        FlutterFlowTheme.of(context)
-                                                                            .alternate,
-                                                                    elevation:
-                                                                        0.0,
-                                                                    playInBackground:
-                                                                        PlayInBackground
-                                                                            .disabledRestoreOnForeground,
-                                                                  ),
-                                                                ),
-                                                                Padding(
-                                                                  padding: EdgeInsetsDirectional
-                                                                      .fromSTEB(
-                                                                          0.0,
-                                                                          0.0,
-                                                                          0.0,
-                                                                          16.0),
-                                                                  child:
-                                                                      InkWell(
-                                                                    splashColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    focusColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    hoverColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    highlightColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    onTap:
-                                                                        () async {
-                                                                      _model.userAnswer =
-                                                                          getJsonField(
-                                                                        categorywisequizItem,
-                                                                        r'''$.option.a''',
-                                                                      ).toString();
-                                                                      _model.actualAnswer =
-                                                                          getJsonField(
-                                                                        categorywisequizItem,
-                                                                        r'''$.answer''',
-                                                                      ).toString();
-                                                                      safeSetState(
-                                                                          () {});
-                                                                      FFAppState()
-                                                                          .buttonColor = FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .primary;
-                                                                      FFAppState()
-                                                                          .buttonColor1 = FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .grey;
-                                                                      FFAppState()
-                                                                          .buttonColor2 = FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .grey;
-                                                                      FFAppState()
-                                                                          .buttonColor3 = FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .grey;
-                                                                      FFAppState()
-                                                                          .update(
-                                                                              () {});
-                                                                    },
-                                                                    child:
-                                                                        Container(
-                                                                      width:
-                                                                          369.0,
-                                                                      decoration:
-                                                                          BoxDecoration(
-                                                                        color: valueOrDefault<
-                                                                            Color>(
-                                                                          FFAppState()
-                                                                              .buttonColor,
-                                                                          FlutterFlowTheme.of(context)
-                                                                              .grey,
-                                                                        ),
-                                                                        borderRadius:
-                                                                            BorderRadius.circular(12.0),
-                                                                      ),
-                                                                      alignment:
-                                                                          AlignmentDirectional(
-                                                                              0.0,
-                                                                              0.0),
-                                                                      child:
-                                                                          Align(
-                                                                        alignment: AlignmentDirectional(
-                                                                            0.0,
-                                                                            0.0),
-                                                                        child:
-                                                                            Padding(
-                                                                          padding:
-                                                                              EdgeInsets.all(16.0),
-                                                                          child:
-                                                                              Text(
-                                                                            getJsonField(
-                                                                              categorywisequizItem,
-                                                                              r'''$.option.a''',
-                                                                            ).toString(),
-                                                                            style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                  fontFamily: 'Roboto',
-                                                                                  fontSize: 18.0,
-                                                                                  letterSpacing: 0.0,
-                                                                                  fontWeight: FontWeight.normal,
-                                                                                  useGoogleFonts: false,
-                                                                                  lineHeight: 1.5,
-                                                                                ),
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                                Padding(
-                                                                  padding: EdgeInsetsDirectional
-                                                                      .fromSTEB(
-                                                                          0.0,
-                                                                          0.0,
-                                                                          0.0,
-                                                                          16.0),
-                                                                  child:
-                                                                      InkWell(
-                                                                    splashColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    focusColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    hoverColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    highlightColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    onTap:
-                                                                        () async {
-                                                                      _model.userAnswer =
-                                                                          getJsonField(
-                                                                        categorywisequizItem,
-                                                                        r'''$.option.b''',
-                                                                      ).toString();
-                                                                      _model.actualAnswer =
-                                                                          getJsonField(
-                                                                        categorywisequizItem,
-                                                                        r'''$.answer''',
-                                                                      ).toString();
-                                                                      safeSetState(
-                                                                          () {});
-                                                                      FFAppState()
-                                                                          .buttonColor = FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .grey;
-                                                                      FFAppState()
-                                                                          .buttonColor1 = FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .primary;
-                                                                      FFAppState()
-                                                                          .buttonColor2 = FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .grey;
-                                                                      FFAppState()
-                                                                          .buttonColor3 = FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .grey;
-                                                                      FFAppState()
-                                                                          .update(
-                                                                              () {});
-                                                                    },
-                                                                    child:
-                                                                        Container(
-                                                                      width:
-                                                                          369.0,
-                                                                      decoration:
-                                                                          BoxDecoration(
-                                                                        color: valueOrDefault<
-                                                                            Color>(
-                                                                          FFAppState()
-                                                                              .buttonColor1,
-                                                                          FlutterFlowTheme.of(context)
-                                                                              .grey,
-                                                                        ),
-                                                                        borderRadius:
-                                                                            BorderRadius.circular(12.0),
-                                                                      ),
-                                                                      child:
-                                                                          Align(
-                                                                        alignment: AlignmentDirectional(
-                                                                            0.0,
-                                                                            0.0),
-                                                                        child:
-                                                                            Padding(
-                                                                          padding:
-                                                                              EdgeInsets.all(16.0),
-                                                                          child:
-                                                                              Text(
-                                                                            getJsonField(
-                                                                              categorywisequizItem,
-                                                                              r'''$.option.b''',
-                                                                            ).toString(),
-                                                                            style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                  fontFamily: 'Roboto',
-                                                                                  fontSize: 18.0,
-                                                                                  letterSpacing: 0.0,
-                                                                                  fontWeight: FontWeight.normal,
-                                                                                  useGoogleFonts: false,
-                                                                                  lineHeight: 1.5,
-                                                                                ),
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                                Padding(
-                                                                  padding: EdgeInsetsDirectional
-                                                                      .fromSTEB(
-                                                                          0.0,
-                                                                          0.0,
-                                                                          0.0,
-                                                                          16.0),
-                                                                  child:
-                                                                      InkWell(
-                                                                    splashColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    focusColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    hoverColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    highlightColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    onTap:
-                                                                        () async {
-                                                                      _model.userAnswer =
-                                                                          getJsonField(
-                                                                        categorywisequizItem,
-                                                                        r'''$.option.c''',
-                                                                      ).toString();
-                                                                      _model.actualAnswer =
-                                                                          getJsonField(
-                                                                        categorywisequizItem,
-                                                                        r'''$.answer''',
-                                                                      ).toString();
-                                                                      safeSetState(
-                                                                          () {});
-                                                                      FFAppState()
-                                                                          .buttonColor = FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .grey;
-                                                                      FFAppState()
-                                                                          .buttonColor1 = FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .grey;
-                                                                      FFAppState()
-                                                                          .buttonColor2 = FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .primary;
-                                                                      FFAppState()
-                                                                          .buttonColor3 = FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .grey;
-                                                                      FFAppState()
-                                                                          .update(
-                                                                              () {});
-                                                                    },
-                                                                    child:
-                                                                        Container(
-                                                                      width:
-                                                                          369.0,
-                                                                      decoration:
-                                                                          BoxDecoration(
-                                                                        color: valueOrDefault<
-                                                                            Color>(
-                                                                          FFAppState()
-                                                                              .buttonColor2,
-                                                                          FlutterFlowTheme.of(context)
-                                                                              .grey,
-                                                                        ),
-                                                                        borderRadius:
-                                                                            BorderRadius.circular(12.0),
-                                                                      ),
-                                                                      child:
-                                                                          Align(
-                                                                        alignment: AlignmentDirectional(
-                                                                            0.0,
-                                                                            0.0),
-                                                                        child:
-                                                                            Padding(
-                                                                          padding:
-                                                                              EdgeInsets.all(16.0),
-                                                                          child:
-                                                                              Text(
-                                                                            getJsonField(
-                                                                              categorywisequizItem,
-                                                                              r'''$.option.c''',
-                                                                            ).toString(),
-                                                                            style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                  fontFamily: 'Roboto',
-                                                                                  fontSize: 18.0,
-                                                                                  letterSpacing: 0.0,
-                                                                                  fontWeight: FontWeight.normal,
-                                                                                  useGoogleFonts: false,
-                                                                                  lineHeight: 1.5,
-                                                                                ),
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                                InkWell(
-                                                                  splashColor:
-                                                                      Colors
-                                                                          .transparent,
-                                                                  focusColor: Colors
-                                                                      .transparent,
-                                                                  hoverColor: Colors
-                                                                      .transparent,
-                                                                  highlightColor:
-                                                                      Colors
-                                                                          .transparent,
-                                                                  onTap:
-                                                                      () async {
-                                                                    _model.userAnswer =
-                                                                        getJsonField(
-                                                                      categorywisequizItem,
-                                                                      r'''$.option.d''',
-                                                                    ).toString();
-                                                                    _model.actualAnswer =
-                                                                        getJsonField(
-                                                                      categorywisequizItem,
-                                                                      r'''$.answer''',
-                                                                    ).toString();
-                                                                    safeSetState(
-                                                                        () {});
-                                                                    FFAppState()
-                                                                        .buttonColor = FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .grey;
-                                                                    FFAppState()
-                                                                        .buttonColor1 = FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .grey;
-                                                                    FFAppState()
-                                                                        .buttonColor2 = FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .grey;
-                                                                    FFAppState()
-                                                                        .buttonColor3 = FlutterFlowTheme.of(
-                                                                            context)
-                                                                        .primary;
-                                                                    FFAppState()
-                                                                        .update(
-                                                                            () {});
-                                                                  },
-                                                                  child:
-                                                                      Container(
-                                                                    width:
-                                                                        369.0,
-                                                                    decoration:
-                                                                        BoxDecoration(
-                                                                      color: valueOrDefault<
-                                                                          Color>(
-                                                                        FFAppState()
-                                                                            .buttonColor3,
-                                                                        FlutterFlowTheme.of(context)
-                                                                            .grey,
-                                                                      ),
-                                                                      borderRadius:
-                                                                          BorderRadius.circular(
-                                                                              12.0),
-                                                                    ),
-                                                                    child:
-                                                                        Align(
-                                                                      alignment:
-                                                                          AlignmentDirectional(
-                                                                              0.0,
-                                                                              0.0),
-                                                                      child:
-                                                                          Padding(
-                                                                        padding:
-                                                                            EdgeInsets.all(16.0),
-                                                                        child:
-                                                                            Text(
-                                                                          getJsonField(
-                                                                            categorywisequizItem,
-                                                                            r'''$.option.d''',
-                                                                          ).toString(),
-                                                                          style: FlutterFlowTheme.of(context)
-                                                                              .bodyMedium
-                                                                              .override(
-                                                                                fontFamily: 'Roboto',
-                                                                                fontSize: 18.0,
-                                                                                letterSpacing: 0.0,
-                                                                                fontWeight: FontWeight.normal,
-                                                                                useGoogleFonts: false,
-                                                                                lineHeight: 1.5,
-                                                                              ),
-                                                                        ),
-                                                                      ),
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        );
-                                                      } else {
-                                                        return Container(
-                                                          width: 100.0,
-                                                          height: 100.0,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: FlutterFlowTheme
-                                                                    .of(context)
-                                                                .secondaryBackground,
-                                                          ),
-                                                        );
-                                                      }
+                                                          }
+                                                          return Container();
+                                                        },
+                                                      );
                                                     },
-                                                  );
-                                                },
-                                              ),
+                                                  ),
+                                                ),
+                                                if (_model.pageViewCurrentIndex > 0)
+                                                  Positioned(
+                                                    left: 16,
+                                                    top: 16,
+                                                    child: InkWell(
+                                                      onTap: () async {
+                                                        await _model.pageViewController?.previousPage(
+                                                          duration: Duration(milliseconds: 300),
+                                                          curve: Curves.ease,
+                                                        );
+                                                        FFAppState().quesIndex = _model.pageViewCurrentIndex;
+                                                                            safeSetState(() {});
+                                                                          },
+                                                      child: Container(
+                                                        width: 40,
+                                                        height: 40,
+                                                        decoration: BoxDecoration(
+                                                          color: FlutterFlowTheme.of(context).secondaryBackground,
+                                                          shape: BoxShape.circle,
+                                                          boxShadow: [
+                                                            BoxShadow(
+                                                              blurRadius: 4,
+                                                              color: Color(0x33000000),
+                                                              offset: Offset(0, 2),
+                                                            )
+                                                          ],
+                                                                      ),
+                                                        child: Icon(
+                                                          Icons.arrow_back_ios_new_rounded,
+                                                          color: FlutterFlowTheme.of(context).primaryText,
+                                                          size: 20,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ],
                                             ),
                                           );
                                         },
@@ -2591,8 +1367,7 @@ class _QuizquestionsScreenCopyWidgetState
                                                                       QuizGroup
                                                                           .getquestionsbyquizidApiCall
                                                                           .questionDetailsList(
-                                                                            (_model.quizRes?.jsonBody ??
-                                                                                ''),
+                                                                            (_model.quizRes?.jsonBody ?? ''),
                                                                           )
                                                                           ?.length,
                                                                       ParamType
@@ -2943,8 +1718,8 @@ class _QuizquestionsScreenCopyWidgetState
                                                                   ?.jsonBody ??
                                                               ''),
                                                         )!
-                                                        .elementAtOrNull(_model
-                                                                .pageViewCurrentIndex +
+                                                        .elementAtOrNull(
+                                                            _model.pageViewCurrentIndex +
                                                             1))!);
                                                     safeSetState(() {});
                                                     _model.userAnswer = null;
@@ -3134,7 +1909,7 @@ class _QuizquestionsScreenCopyWidgetState
                                                                                 (_model.quizRes?.jsonBody ?? ''),
                                                                               )
                                                                               ?.length,
-                                                                          ParamType
+                                                                            ParamType
                                                                               .int,
                                                                         ),
                                                                         'notAnswer':

@@ -1,5 +1,4 @@
 import '/backend/api_requests/api_calls.dart';
-import '/componants/coins_not_sufficient_dialog/coins_not_sufficient_dialog_widget.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -349,7 +348,7 @@ class _DetailScreenWidgetState extends State<DetailScreenWidget>
                                                         ),
                                                   ),
                                                   TextSpan(
-                                                    text: '  points',
+                                                    text: '  numbers',
                                                     style: TextStyle(),
                                                   )
                                                 ],
@@ -442,7 +441,7 @@ class _DetailScreenWidgetState extends State<DetailScreenWidget>
                                                         ),
                                                   ),
                                                   TextSpan(
-                                                    text: ' points',
+                                                    text: ' numbers',
                                                     style: TextStyle(),
                                                   )
                                                 ],
@@ -624,104 +623,51 @@ class _DetailScreenWidgetState extends State<DetailScreenWidget>
                           16.0, 20.0, 16.0, 24.0),
                       child: FFButtonWidget(
                         onPressed: () async {
+                          print('DEBUG: Start Test button pressed');
                           FFAppState().categoryID = widget.catId!;
                           FFAppState().update(() {});
-                          _model.rankRes =
-                              await QuizGroup.getuserrankApiCall.call(
-                            userId: getJsonField(
-                              FFAppState().userDetils,
-                              r'''$.id''',
-                            ).toString(),
-                            token: FFAppState().loginToken,
-                          );
-
-                          if ((QuizGroup.getuserrankApiCall.success(
-                                (_model.rankRes?.jsonBody ?? ''),
-                              ) ?? 0) ==
-                              1) {
-                            final points = QuizGroup.getuserrankApiCall
-                                .points(
-                                  (_model.rankRes?.jsonBody ?? ''),
-                                );
-                            FFAppState().userPoints = points != null ? points.toInt() : 0;
-                            safeSetState(() {});
-                            if (FFAppState().userPoints < 10) {
-                              await showDialog(
-                                context: context,
-                                builder: (dialogContext) {
-                                  return Dialog(
-                                    elevation: 0,
-                                    insetPadding: EdgeInsets.zero,
-                                    backgroundColor: Colors.transparent,
-                                    alignment: AlignmentDirectional(0.0, 0.0)
-                                        .resolve(Directionality.of(context)),
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        FocusScope.of(dialogContext).unfocus();
-                                        FocusManager.instance.primaryFocus
-                                            ?.unfocus();
-                                      },
-                                      child: CoinsNotSufficientDialogWidget(
-                                        actionHome: () async {
-                                          context.goNamed(
-                                              BuyPointsScreenWidget.routeName);
-
-                                          Navigator.pop(context);
-                                        },
-                                      ),
-                                    ),
-                                  );
-                                },
-                              );
-                            } else {
-                              await QuizGroup.addPointsApiCall.call(
-                                userId: getJsonField(
-                                  FFAppState().userDetils,
-                                  r'''$.id''',
-                                ).toString(),
-                                points: -10.0,
-                                description:
-                                    '${widget.name} deducted quiz points ',
-                                token: FFAppState().loginToken,
-                              );
-
-                              FFAppState().clearCoinsCache();
-
-                              context.pushNamed(
-                                QuizQuestionsScreenWidget.routeName,
-                                queryParameters: {
-                                  'title': serializeParam(
-                                    widget.name,
-                                    ParamType.String,
-                                  ),
-                                  'catId': serializeParam(
-                                    widget.catId,
-                                    ParamType.String,
-                                  ),
-                                  'image': serializeParam(
-                                    widget.image,
-                                    ParamType.String,
-                                  ),
-                                  'time': serializeParam(
-                                    int.parse((widget.quizTime!)),
-                                    ParamType.int,
-                                  ),
-                                  'quizID': serializeParam(
-                                    widget.quizID,
-                                    ParamType.String,
-                                  ),
-                                  'timerStatus': serializeParam(
-                                    widget.timerStatus,
-                                    ParamType.int,
-                                  ),
-                                }.withoutNulls,
-                              );
-                            }
+                          try {
+                            // Directly navigate to quiz screen, skip points check
+                            print('DEBUG: Navigating to QuizQuestionsScreenWidget (no points check)');
+                            context.pushNamed(
+                              QuizQuestionsScreenWidget.routeName,
+                              queryParameters: {
+                                'title': serializeParam(
+                                  widget.name,
+                                  ParamType.String,
+                                ),
+                                'catId': serializeParam(
+                                  widget.catId,
+                                  ParamType.String,
+                                ),
+                                'image': serializeParam(
+                                  widget.image,
+                                  ParamType.String,
+                                ),
+                                'time': serializeParam(
+                                  int.parse((widget.quizTime!)),
+                                  ParamType.int,
+                                ),
+                                'quizID': serializeParam(
+                                  widget.quizID,
+                                  ParamType.String,
+                                ),
+                                'timerStatus': serializeParam(
+                                  widget.timerStatus,
+                                  ParamType.int,
+                                ),
+                              }.withoutNulls,
+                            );
+                          } catch (e, st) {
+                            print('ERROR: Exception in Start Test: \\${e.toString()}');
+                            print(st);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error starting quiz: \\${e.toString()}')),
+                            );
                           }
-
                           safeSetState(() {});
                         },
-                        text: 'Start quiz',
+                        text: 'Start Test',
                         options: FFButtonOptions(
                           width: double.infinity,
                           height: 56.0,

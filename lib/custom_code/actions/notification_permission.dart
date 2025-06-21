@@ -29,55 +29,7 @@ Future notificationPermission() async {
   WakelockPlus.enable();
 }
 
+@pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-  if (message.messageId != "") {
-    // DateTime now = DateTime.now();
-
-    // String formattedDate = DateFormat('yyyy-MM-dd').format(now);
-
-    // String formattedTime = DateFormat('hh:mm:ss').format(now);
-
-    // try {
-    //   await NotificationRecord.collection
-    //       .doc()
-    //       .set(createNotificationRecordData(
-    //         title: message.notification!.title,
-    //         description: message.notification!.body,
-    //         image: message.notification!.android!.imageUrl,
-    //         createdAt: formattedTime,
-    //         updatedAt: DateTime.now().toString(),
-    //         createdDate: formattedDate,
-    //         read: false,
-    //       ))
-    //       .then(
-    //     (value) {
-    //       debugPrint("Notification added to Firestore!");
-    //     },
-    //   );
-    // } catch (e) {
-    //   debugPrint("Error adding notification to Firestore: $e");
-    // }
-    debugPrint(
-        "Have received a background message! Will have to grab the message from here somehow if the user didn't interact with the system tray message link");
-  }
-
-  if (Platform.isIOS || Platform.isMacOS) {
-    await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
-    await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            MacOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
-  } else if (Platform.isAndroid) {}
+  print('Handling a background message: ${message.messageId}');
 }

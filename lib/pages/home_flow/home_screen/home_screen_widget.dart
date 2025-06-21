@@ -62,31 +62,6 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget>
             r'''$.email''',
           ).toString().toString(),
         );
-
-        if (QuizGroup.isVerifyAccountCall.success(
-              (_model.apiResultaov?.jsonBody ?? ''),
-            ) !=
-            1) {
-          await showDialog(
-            context: context,
-            builder: (dialogContext) {
-              return Dialog(
-                elevation: 0,
-                insetPadding: EdgeInsets.zero,
-                backgroundColor: Colors.transparent,
-                alignment: AlignmentDirectional(0.0, 0.0)
-                    .resolve(Directionality.of(context)),
-                child: GestureDetector(
-                  onTap: () {
-                    FocusScope.of(dialogContext).unfocus();
-                    FocusManager.instance.primaryFocus?.unfocus();
-                  },
-                  child: EmailVerificationDialogWidget(),
-                ),
-              );
-            },
-          );
-        }
       }
       _model.getUserRankRes = await QuizGroup.getuserrankApiCall.call(
         userId: getJsonField(

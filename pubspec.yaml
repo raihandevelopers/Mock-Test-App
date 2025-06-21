@@ -50,7 +50,9 @@ dependencies:
   file_picker: 8.1.2
   firebase_core: 3.8.0
   firebase_core_platform_interface: 5.3.0
+  google_sign_in: ^6.0.0
   firebase_core_web: 2.18.1
+  firebase_auth: 5.3.3
   firebase_messaging:
   firebase_performance: 0.10.0+10
   firebase_performance_platform_interface: 0.1.4+46
@@ -78,7 +80,7 @@ dependencies:
   image_picker_macos: 0.2.1+1
   image_picker_platform_interface: 2.10.0
   image_picker_windows: 0.2.1+1
-  intl: ^0.19.0
+  intl: 0.20.2
   intl_phone_field: ^3.2.0
   json_path: 0.7.2
   linear_timer:
@@ -129,6 +131,7 @@ dependencies:
   video_player_web: 2.3.2
   wakelock_plus: ^1.2.8
   workmanager: ^0.6.0
+  google_cloud_translation: 0.0.4
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

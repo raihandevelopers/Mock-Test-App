@@ -80,7 +80,7 @@ class _CompletedQuizzesScreenWidgetState
               model: _model.appBarModel,
               updateCallback: () => safeSetState(() {}),
               child: AppBarWidget(
-                title: 'Completed quizzes',
+                title: 'Completed Tests',
                 backIcon: false,
               ),
             ),

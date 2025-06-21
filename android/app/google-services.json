@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "161514790490",
+    "firebase_url": "https://mock-test-f74e7-default-rtdb.firebaseio.com",
     "project_id": "mock-test-f74e7",
     "storage_bucket": "mock-test-f74e7.firebasestorage.app"
   },
@@ -12,7 +13,28 @@
           "package_name": "com.mocktest.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "161514790490-2kbn6f93m12u2gdusofb6v8gm91e3bo0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mocktest.app",
+            "certificate_hash": "51e14db057cc4f1bdd1fcc734fe8ef974a5a2e97"
+          }
+        },
+        {
+          "client_id": "161514790490-4q87bqsanh2b69abu6jft7mf0psn7m8i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mocktest.app",
+            "certificate_hash": "0d619b1d76860c484aff86f52703c6f330c7e4c5"
+          }
+        },
+        {
+          "client_id": "161514790490-vuadkdkbfdtgseo0i7c5hf1n2bgbd6rc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBSH6xKQGsdxfR9uScI1mgc9OCe-dL7858"
@@ -20,7 +42,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "161514790490-su2o0nlmg4obabr9eie248f17pmf4k0a.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

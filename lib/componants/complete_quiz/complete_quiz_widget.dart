@@ -69,7 +69,7 @@ class _CompleteQuizWidgetState extends State<CompleteQuizWidget> {
                 Padding(
                   padding: EdgeInsetsDirectional.fromSTEB(0.0, 26.0, 0.0, 0.0),
                   child: Text(
-                    'Quiz completed successfully',
+                    'Test completed successfully',
                     textAlign: TextAlign.center,
                     style: FlutterFlowTheme.of(context).bodyMedium.override(
                           fontFamily: 'Roboto',
@@ -96,11 +96,11 @@ class _CompleteQuizWidgetState extends State<CompleteQuizWidget> {
                                 try {
                                   await widget.completed!();
                                 } catch (e) {
-                                  print('Error completing quiz: $e');
+                                  print('Error completing Test: $e');
                                   // Show error message to user
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Error completing quiz. Please try again.'),
+                                      content: Text('Error completing Test. Please try again.'),
                                       duration: Duration(seconds: 3),
                                     ),
                                   );
@@ -110,7 +110,7 @@ class _CompleteQuizWidgetState extends State<CompleteQuizWidget> {
                                 Navigator.pop(context);
                               }
                             },
-                            text: 'Go to quiz result ',
+                            text: 'Go to Test result ',
                             options: FFButtonOptions(
                               height: 56.0,
                               padding: EdgeInsetsDirectional.fromSTEB(

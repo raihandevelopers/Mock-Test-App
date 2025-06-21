@@ -37,95 +37,176 @@ class _SplashScreenWidgetState extends State<SplashScreenWidget>
 
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
-      await Future.delayed(const Duration(milliseconds: 3000));
-      await actions.getDeviceId();
-      await actions.getFCM();
-      await actions.counterAdAction();
-      if (FFAppState().isInite == true) {
-        if (FFAppState().isLogin == true) {
-          // Skip ad validation and set default values
-          FFAppState().isBannerAd = 0;
-          FFAppState().isInterstialAd = 0;
-          FFAppState().isRewardedVideoAd = 0;
-          FFAppState().rewardedPoints = 0;
-          FFAppState().update(() {});
-          context.goNamed(HomeScreenWidget.routeName);
-        } else {
-          context.goNamed(LoginScreenWidget.routeName);
-        }
-      } else {
+      try {
+        print('Starting splash screen initialization...');
+        
+        // Add a timeout for the entire initialization process
+        await Future.delayed(const Duration(milliseconds: 3000));
+        
+        print('Getting device ID...');
         try {
-          _model.introRes = await QuizGroup.getIntroAPICall.call();
-          
-          print('Intro API Response: ${_model.introRes?.jsonBody}');
-          
-          if (_model.introRes == null) {
-            print('Intro API Response is null');
-            // Handle null response by going to login
+          await actions.getDeviceId();
+          print('Device ID obtained successfully');
+        } catch (e) {
+          print('Error getting device ID: $e');
+        }
+        
+        print('Getting FCM token...');
+        try {
+          await actions.getFCM();
+          print('FCM token obtained successfully');
+        } catch (e) {
+          print('Error getting FCM token: $e');
+        }
+        
+        print('Getting ad counter...');
+        try {
+          await actions.counterAdAction();
+          print('Ad counter obtained successfully');
+        } catch (e) {
+          print('Error getting ad counter: $e');
+        }
+
+        print('Checking app initialization status...');
+        print('isInite: ${FFAppState().isInite}');
+        print('isLogin: ${FFAppState().isLogin}');
+        
+        if (FFAppState().isInite == true) {
+          print('App already initialized, checking login status...');
+          if (FFAppState().isLogin == true) {
+            print('User is logged in, proceeding to home screen...');
+            // Skip ad validation and set default values
+            FFAppState().isBannerAd = 0;
+            FFAppState().isInterstialAd = 0;
+            FFAppState().isRewardedVideoAd = 0;
+            FFAppState().rewardedPoints = 0;
+            FFAppState().update(() {});
+            print('Navigating to home screen...');
+            context.goNamed(HomeScreenWidget.routeName);
+          } else {
+            print('User is not logged in, proceeding to login screen...');
+            context.goNamed(LoginScreenWidget.routeName);
+          }
+        } else {
+          print('App not initialized, getting intro data...');
+          try {
+            print('Calling intro API...');
+            print('API URL: ${QuizGroup.getBaseUrl()}getintro');
+            
+            _model.introRes = await QuizGroup.getIntroAPICall.call().timeout(
+              const Duration(seconds: 10),
+              onTimeout: () {
+                print('Intro API call timed out after 10 seconds');
+                return ApiCallResponse(
+                  '{"success":0,"message":"Timeout getting intro data"}',
+                  {'content-type': 'application/json'},
+                  -1,
+                );
+              },
+            );
+            
+            print('Intro API Response Status: ${_model.introRes?.statusCode}');
+            print('Intro API Response Headers: ${_model.introRes?.headers}');
+            print('Intro API Response Body: ${_model.introRes?.jsonBody}');
+            
+            if (_model.introRes == null) {
+              print('Intro API Response is null, proceeding to login...');
+              FFAppState().isInite = true;
+              FFAppState().update(() {});
+              context.goNamed(LoginScreenWidget.routeName);
+              return;
+            }
+
+            if (_model.introRes?.statusCode == -1) {
+              print('Intro API call failed with status code -1, proceeding to login...');
+              FFAppState().isInite = true;
+              FFAppState().update(() {});
+              context.goNamed(LoginScreenWidget.routeName);
+              return;
+            }
+
+            final success = QuizGroup.getIntroAPICall.success(
+              (_model.introRes?.jsonBody ?? ''),
+            );
+            print('Intro API success value: $success');
+
+            if (success == 1) {
+              print('Intro API successful, proceeding to onboarding...');
+              context.goNamed(
+                OnBordingScreenWidget.routeName,
+                queryParameters: {
+                  'introsList': serializeParam(
+                    QuizGroup.getIntroAPICall.introDetailsList(
+                      (_model.introRes?.jsonBody ?? ''),
+                    ),
+                    ParamType.JSON,
+                    isList: true,
+                  ),
+                }.withoutNulls,
+              );
+            } else {
+              print('Intro API success is not 1, checking login status...');
+              if (FFAppState().isLogin == true) {
+                print('User is logged in, getting ad settings...');
+                _model.getAds = await QuizGroup.getadssettingsApiCall.call(
+                  token: FFAppState().loginToken,
+                ).timeout(
+                  const Duration(seconds: 10),
+                  onTimeout: () {
+                    print('Ad settings API call timed out after 10 seconds');
+                    return ApiCallResponse(
+                      '{"success":0,"message":"Timeout getting ad settings"}',
+                      {'content-type': 'application/json'},
+                      -1,
+                    );
+                  },
+                );
+
+                print('Ad Settings Response: ${_model.getAds?.jsonBody}');
+
+                if (QuizGroup.getadssettingsApiCall.success(
+                      (_model.getAds?.jsonBody ?? ''),
+                    ) == 1) {
+                  print('Ad settings successful, updating app state...');
+                  FFAppState().isBannerAd = (QuizGroup.getadssettingsApiCall.banner(
+                    (_model.getAds?.jsonBody ?? ''),
+                  ) as int?) ?? 0;
+                  FFAppState().isInterstialAd = (QuizGroup.getadssettingsApiCall.interstial(
+                    (_model.getAds?.jsonBody ?? ''),
+                  ) as int?) ?? 0;
+                  FFAppState().isRewardedVideoAd = (QuizGroup.getadssettingsApiCall.rewarded(
+                    (_model.getAds?.jsonBody ?? ''),
+                  ) as int?) ?? 0;
+                  FFAppState().rewardedPoints = (QuizGroup.getadssettingsApiCall.points(
+                    (_model.getAds?.jsonBody ?? ''),
+                  ) as int?) ?? 0;
+                  FFAppState().update(() {});
+                }
+
+                print('Proceeding to home screen...');
+                context.goNamed(HomeScreenWidget.routeName);
+              } else {
+                print('User is not logged in, proceeding to login screen...');
+                FFAppState().isInite = true;
+                FFAppState().update(() {});
+
+                context.goNamed(LoginScreenWidget.routeName);
+              }
+            }
+          } catch (e, stackTrace) {
+            print('Error in intro API call: $e');
+            print('Stack trace: $stackTrace');
             FFAppState().isInite = true;
             FFAppState().update(() {});
             context.goNamed(LoginScreenWidget.routeName);
-            return;
           }
-
-          if (QuizGroup.getIntroAPICall.success(
-                (_model.introRes?.jsonBody ?? ''),
-              ) ==
-              1) {
-            context.goNamed(
-              OnBordingScreenWidget.routeName,
-              queryParameters: {
-                'introsList': serializeParam(
-                  QuizGroup.getIntroAPICall.introDetailsList(
-                    (_model.introRes?.jsonBody ?? ''),
-                  ),
-                  ParamType.JSON,
-                  isList: true,
-                ),
-              }.withoutNulls,
-            );
-          } else {
-            print('Intro API success is not 1');
-            if (FFAppState().isLogin == true) {
-              _model.getAds = await QuizGroup.getadssettingsApiCall.call(
-                token: FFAppState().loginToken,
-              );
-
-              print('Ad Settings Response: ${_model.getAds?.jsonBody}');
-
-              if (QuizGroup.getadssettingsApiCall.success(
-                    (_model.getAds?.jsonBody ?? ''),
-                  ) ==
-                  1) {
-                FFAppState().isBannerAd = (QuizGroup.getadssettingsApiCall.banner(
-                  (_model.getAds?.jsonBody ?? ''),
-                ) as int?) ?? 0;
-                FFAppState().isInterstialAd = (QuizGroup.getadssettingsApiCall.interstial(
-                  (_model.getAds?.jsonBody ?? ''),
-                ) as int?) ?? 0;
-                FFAppState().isRewardedVideoAd = (QuizGroup.getadssettingsApiCall.rewarded(
-                  (_model.getAds?.jsonBody ?? ''),
-                ) as int?) ?? 0;
-                FFAppState().rewardedPoints = (QuizGroup.getadssettingsApiCall.points(
-                  (_model.getAds?.jsonBody ?? ''),
-                ) as int?) ?? 0;
-                FFAppState().update(() {});
-              }
-
-              context.goNamed(HomeScreenWidget.routeName);
-            } else {
-              FFAppState().isInite = true;
-              FFAppState().update(() {});
-
-              context.goNamed(LoginScreenWidget.routeName);
-            }
-          }
-        } catch (e) {
-          print('Error in intro API call: $e');
-          FFAppState().isInite = true;
-          FFAppState().update(() {});
-          context.goNamed(LoginScreenWidget.routeName);
         }
+      } catch (e) {
+        print('Error in splash screen initialization: $e');
+        // If anything fails, proceed to login screen
+        FFAppState().isInite = true;
+        FFAppState().update(() {});
+        context.goNamed(LoginScreenWidget.routeName);
       }
     });
 

@@ -17,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 import 'quiz_questions_screen_model.dart';
+import 'package:google_cloud_translation/google_cloud_translation.dart';
 export 'quiz_questions_screen_model.dart';
 
 class QuizQuestionsScreenWidget extends StatefulWidget {
@@ -50,10 +51,18 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
+  // Translation related state
+  late Translation _translation;
+  String _selectedLang = 'en';
+  String _translatedQuestion = '';
+  List<String> _translatedOptions = [];
+  bool _isTranslating = false;
+
   @override
   void initState() {
     super.initState();
     _model = createModel(context, () => QuizQuestionsScreenModel());
+    _translation = Translation(apiKey: 'AIzaSyCsrdktiTiJHrsd9n3EZ323XksrqVBIUzw'); // <-- Replace with your API key
 
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
@@ -78,6 +87,21 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
+  }
+
+  Future<void> _translateQuestionAndOptions(String question, List<String> options) async {
+    setState(() { _isTranslating = true; });
+    final translatedQ = await _translation.translate(text: question, to: _selectedLang);
+    final translatedOpts = <String>[];
+    for (final opt in options) {
+      final t = await _translation.translate(text: opt, to: _selectedLang);
+      translatedOpts.add(t.translatedText);
+    }
+    setState(() {
+      _translatedQuestion = translatedQ.translatedText;
+      _translatedOptions = translatedOpts;
+      _isTranslating = false;
+    });
   }
 
   @override
@@ -165,32 +189,22 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                               splashColor: Colors.transparent,
                                               focusColor: Colors.transparent,
                                               hoverColor: Colors.transparent,
-                                              highlightColor:
-                                                  Colors.transparent,
+                                              highlightColor: Colors.transparent,
                                               onTap: () async {
+                                                if (_model.pageViewCurrentIndex == 0) {
+                                                  // Show quit dialog and reset state as before
                                                 await showDialog(
                                                   context: context,
                                                   builder: (dialogContext) {
                                                     return Dialog(
                                                       elevation: 0,
-                                                      insetPadding:
-                                                          EdgeInsets.zero,
-                                                      backgroundColor:
-                                                          Colors.transparent,
-                                                      alignment:
-                                                          AlignmentDirectional(
-                                                                  0.0, 0.0)
-                                                              .resolve(
-                                                                  Directionality.of(
-                                                                      context)),
+                                                        insetPadding: EdgeInsets.zero,
+                                                        backgroundColor: Colors.transparent,
+                                                        alignment: AlignmentDirectional(0.0, 0.0).resolve(Directionality.of(context)),
                                                       child: GestureDetector(
                                                         onTap: () {
-                                                          FocusScope.of(
-                                                                  dialogContext)
-                                                              .unfocus();
-                                                          FocusManager.instance
-                                                              .primaryFocus
-                                                              ?.unfocus();
+                                                            FocusScope.of(dialogContext).unfocus();
+                                                            FocusManager.instance.primaryFocus?.unfocus();
                                                         },
                                                         child: QuitQuizWidget(),
                                                       ),
@@ -204,23 +218,29 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                 safeSetState(() {});
                                                 FFAppState().wrongQues = 0;
                                                 safeSetState(() {});
+                                                } else {
+                                                  // Go to previous question
+                                                  await _model.pageViewController?.previousPage(
+                                                    duration: Duration(milliseconds: 300),
+                                                    curve: Curves.ease,
+                                                  );
+                                                  FFAppState().quesIndex = _model.pageViewCurrentIndex;
+                                                  safeSetState(() {});
+                                                }
                                               },
                                               child: Container(
                                                 width: 40.0,
                                                 height: 40.0,
                                                 decoration: BoxDecoration(
-                                                  color: FlutterFlowTheme.of(
-                                                          context)
-                                                      .lightGrey,
+                                                  color: FlutterFlowTheme.of(context).lightGrey,
                                                   shape: BoxShape.circle,
                                                 ),
-                                                alignment: AlignmentDirectional(
-                                                    0.0, 0.0),
+                                                alignment: AlignmentDirectional(0.0, 0.0),
                                                 child: Icon(
-                                                  Icons.close_sharp,
-                                                  color: FlutterFlowTheme.of(
-                                                          context)
-                                                      .primaryText,
+                                                  _model.pageViewCurrentIndex == 0
+                                                    ? Icons.close_sharp
+                                                    : Icons.arrow_back_ios_new_rounded,
+                                                  color: FlutterFlowTheme.of(context).primaryText,
                                                   size: 24.0,
                                                 ),
                                               ),
@@ -925,15 +945,54 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                           scrollDirection:
                                                                               Axis.vertical,
                                                                           children: [
+                                                                            Padding(
+                                                                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                                                                              child: Row(
+                                                                                mainAxisAlignment: MainAxisAlignment.end,
+                                                                                children: [
+                                                                                  Text('Language: '),
+                                                                                  DropdownButton<String>(
+                                                                                    value: _selectedLang,
+                                                                                    items: [
+                                                                                      DropdownMenuItem(value: 'en', child: Text('English')),
+                                                                                      DropdownMenuItem(value: 'hi', child: Text('Hindi')),
+                                                                                    ],
+                                                                                    onChanged: (val) async {
+                                                                                      if (val == null) return;
+                                                                                      setState(() { _selectedLang = val; });
+                                                                                      // Get current question and options
+                                                                                      final categorywisequiz = QuizGroup.getquestionsbyquizidApiCall.questionDetailsList((_model.quizRes?.jsonBody ?? ''),)?.toList() ?? [];
+                                                                                      final idx = _model.pageViewCurrentIndex;
+                                                                                      if (categorywisequiz.isNotEmpty && idx < categorywisequiz.length) {
+                                                                                        final q = getJsonField(categorywisequiz[idx], r'''$.question_title''').toString();
+                                                                                        final opts = [
+                                                                                          getJsonField(categorywisequiz[idx], r'''$.option.a''').toString(),
+                                                                                          getJsonField(categorywisequiz[idx], r'''$.option.b''').toString(),
+                                                                                          getJsonField(categorywisequiz[idx], r'''$.option.c''').toString(),
+                                                                                          getJsonField(categorywisequiz[idx], r'''$.option.d''').toString(),
+                                                                                        ];
+                                                                                        if (val == 'en') {
+                                                                                          setState(() {
+                                                                                            _translatedQuestion = q;
+                                                                                            _translatedOptions = opts;
+                                                                                          });
+                                                                                        } else {
+                                                                                          await _translateQuestionAndOptions(q, opts);
+                                                                                        }
+                                                                                      }
+                                                                                    },
+                                                                                  ),
+                                                                                ],
+                                                                              ),
+                                                                            ),
                                                                             Align(
                                                                               alignment: AlignmentDirectional(-1.0, 0.0),
                                                                               child: Padding(
                                                                                 padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 24.0),
                                                                                 child: Text(
-                                                                                  getJsonField(
-                                                                                    categorywisequizItem,
-                                                                                    r'''$.question_title''',
-                                                                                  ).toString(),
+                                                                                  _selectedLang == 'en'
+                                                                                    ? getJsonField(categorywisequizItem, r'''$.question_title''').toString()
+                                                                                    : _translatedQuestion.isNotEmpty ? _translatedQuestion : getJsonField(categorywisequizItem, r'''$.question_title''').toString(),
                                                                                   textAlign: TextAlign.start,
                                                                                   style: FlutterFlowTheme.of(context).bodyMedium.override(
                                                                                         fontFamily: 'Roboto',
@@ -978,10 +1037,9 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                     child: Padding(
                                                                                       padding: EdgeInsets.all(16.0),
                                                                                       child: Text(
-                                                                                        getJsonField(
-                                                                                          categorywisequizItem,
-                                                                                          r'''$.option.a''',
-                                                                                        ).toString(),
+                                                                                        _selectedLang == 'en'
+                                                                                          ? getJsonField(categorywisequizItem, r'''$.option.a''').toString()
+                                                                                          : (_translatedOptions.isNotEmpty ? _translatedOptions[0] : getJsonField(categorywisequizItem, r'''$.option.a''').toString()),
                                                                                         style: FlutterFlowTheme.of(context).bodyMedium.override(
                                                                                               fontFamily: 'Roboto',
                                                                                               fontSize: 18.0,
@@ -1027,10 +1085,9 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                     child: Padding(
                                                                                       padding: EdgeInsets.all(16.0),
                                                                                       child: Text(
-                                                                                        getJsonField(
-                                                                                          categorywisequizItem,
-                                                                                          r'''$.option.b''',
-                                                                                        ).toString(),
+                                                                                        _selectedLang == 'en'
+                                                                                          ? getJsonField(categorywisequizItem, r'''$.option.b''').toString()
+                                                                                          : (_translatedOptions.isNotEmpty ? _translatedOptions[1] : getJsonField(categorywisequizItem, r'''$.option.b''').toString()),
                                                                                         style: FlutterFlowTheme.of(context).bodyMedium.override(
                                                                                               fontFamily: 'Roboto',
                                                                                               fontSize: 18.0,
@@ -1076,10 +1133,9 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                     child: Padding(
                                                                                       padding: EdgeInsets.all(16.0),
                                                                                       child: Text(
-                                                                                        getJsonField(
-                                                                                          categorywisequizItem,
-                                                                                          r'''$.option.c''',
-                                                                                        ).toString(),
+                                                                                        _selectedLang == 'en'
+                                                                                          ? getJsonField(categorywisequizItem, r'''$.option.c''').toString()
+                                                                                          : (_translatedOptions.isNotEmpty ? _translatedOptions[2] : getJsonField(categorywisequizItem, r'''$.option.c''').toString()),
                                                                                         style: FlutterFlowTheme.of(context).bodyMedium.override(
                                                                                               fontFamily: 'Roboto',
                                                                                               fontSize: 18.0,
@@ -1123,10 +1179,9 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                   child: Padding(
                                                                                     padding: EdgeInsets.all(16.0),
                                                                                     child: Text(
-                                                                                      getJsonField(
-                                                                                        categorywisequizItem,
-                                                                                        r'''$.option.d''',
-                                                                                      ).toString(),
+                                                                                      _selectedLang == 'en'
+                                                                                        ? getJsonField(categorywisequizItem, r'''$.option.d''').toString()
+                                                                                        : (_translatedOptions.isNotEmpty ? _translatedOptions[3] : getJsonField(categorywisequizItem, r'''$.option.d''').toString()),
                                                                                       style: FlutterFlowTheme.of(context).bodyMedium.override(
                                                                                             fontFamily: 'Roboto',
                                                                                             fontSize: 18.0,
@@ -1190,10 +1245,9 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                               child: Padding(
                                                                                 padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 24.0),
                                                                                 child: Text(
-                                                                                  getJsonField(
-                                                                                    categorywisequizItem,
-                                                                                    r'''$.question_title''',
-                                                                                  ).toString(),
+                                                                                  _selectedLang == 'en'
+                                                                                    ? getJsonField(categorywisequizItem, r'''$.question_title''').toString()
+                                                                                    : _translatedQuestion.isNotEmpty ? _translatedQuestion : getJsonField(categorywisequizItem, r'''$.question_title''').toString(),
                                                                                   textAlign: TextAlign.start,
                                                                                   style: FlutterFlowTheme.of(context).bodyMedium.override(
                                                                                         fontFamily: 'Roboto',
@@ -1364,10 +1418,9 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                               child: Padding(
                                                                                 padding: EdgeInsetsDirectional.fromSTEB(0.0, 20.0, 0.0, 24.0),
                                                                                 child: Text(
-                                                                                  getJsonField(
-                                                                                    categorywisequizItem,
-                                                                                    r'''$.question_title''',
-                                                                                  ).toString(),
+                                                                                  _selectedLang == 'en'
+                                                                                    ? getJsonField(categorywisequizItem, r'''$.question_title''').toString()
+                                                                                    : _translatedQuestion.isNotEmpty ? _translatedQuestion : getJsonField(categorywisequizItem, r'''$.question_title''').toString(),
                                                                                   textAlign: TextAlign.start,
                                                                                   style: FlutterFlowTheme.of(context).bodyMedium.override(
                                                                                         fontFamily: 'Roboto',
@@ -1414,10 +1467,9 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                         child: Padding(
                                                                                           padding: EdgeInsets.all(16.0),
                                                                                           child: Text(
-                                                                                            getJsonField(
-                                                                                              categorywisequizItem,
-                                                                                              r'''$.option.a''',
-                                                                                            ).toString(),
+                                                                                            _selectedLang == 'en'
+                                                                                              ? getJsonField(categorywisequizItem, r'''$.option.a''').toString()
+                                                                                              : (_translatedOptions.isNotEmpty ? _translatedOptions[0] : getJsonField(categorywisequizItem, r'''$.option.a''').toString()),
                                                                                             style: FlutterFlowTheme.of(context).bodyMedium.override(
                                                                                                   fontFamily: 'Roboto',
                                                                                                   fontSize: 18.0,
@@ -1461,10 +1513,9 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                         child: Padding(
                                                                                           padding: EdgeInsets.all(16.0),
                                                                                           child: Text(
-                                                                                            getJsonField(
-                                                                                              categorywisequizItem,
-                                                                                              r'''$.option.b''',
-                                                                                            ).toString(),
+                                                                                            _selectedLang == 'en'
+                                                                                              ? getJsonField(categorywisequizItem, r'''$.option.b''').toString()
+                                                                                              : (_translatedOptions.isNotEmpty ? _translatedOptions[1] : getJsonField(categorywisequizItem, r'''$.option.b''').toString()),
                                                                                             style: FlutterFlowTheme.of(context).bodyMedium.override(
                                                                                                   fontFamily: 'Roboto',
                                                                                                   fontSize: 18.0,
@@ -1517,10 +1568,9 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                           child: Padding(
                                                                                             padding: EdgeInsets.all(16.0),
                                                                                             child: Text(
-                                                                                              getJsonField(
-                                                                                                categorywisequizItem,
-                                                                                                r'''$.option.c''',
-                                                                                              ).toString(),
+                                                                                              _selectedLang == 'en'
+                                                                                                ? getJsonField(categorywisequizItem, r'''$.option.c''').toString()
+                                                                                                : (_translatedOptions.isNotEmpty ? _translatedOptions[2] : getJsonField(categorywisequizItem, r'''$.option.c''').toString()),
                                                                                               style: FlutterFlowTheme.of(context).bodyMedium.override(
                                                                                                     fontFamily: 'Roboto',
                                                                                                     fontSize: 18.0,
@@ -1564,10 +1614,9 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                           child: Padding(
                                                                                             padding: EdgeInsets.all(16.0),
                                                                                             child: Text(
-                                                                                              getJsonField(
-                                                                                                categorywisequizItem,
-                                                                                                r'''$.option.d''',
-                                                                                              ).toString(),
+                                                                                              _selectedLang == 'en'
+                                                                                                ? getJsonField(categorywisequizItem, r'''$.option.d''').toString()
+                                                                                                : (_translatedOptions.isNotEmpty ? _translatedOptions[3] : getJsonField(categorywisequizItem, r'''$.option.d''').toString()),
                                                                                               style: FlutterFlowTheme.of(context).bodyMedium.override(
                                                                                                     fontFamily: 'Roboto',
                                                                                                     fontSize: 18.0,
@@ -1635,10 +1684,9 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                               child: Padding(
                                                                                 padding: EdgeInsetsDirectional.fromSTEB(0.0, 0.0, 0.0, 24.0),
                                                                                 child: Text(
-                                                                                  getJsonField(
-                                                                                    categorywisequizItem,
-                                                                                    r'''$.question_title''',
-                                                                                  ).toString(),
+                                                                                  _selectedLang == 'en'
+                                                                                    ? getJsonField(categorywisequizItem, r'''$.question_title''').toString()
+                                                                                    : _translatedQuestion.isNotEmpty ? _translatedQuestion : getJsonField(categorywisequizItem, r'''$.question_title''').toString(),
                                                                                   textAlign: TextAlign.start,
                                                                                   style: FlutterFlowTheme.of(context).bodyMedium.override(
                                                                                         fontFamily: 'Roboto',
@@ -1719,10 +1767,9 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                     child: Padding(
                                                                                       padding: EdgeInsets.all(16.0),
                                                                                       child: Text(
-                                                                                        getJsonField(
-                                                                                          categorywisequizItem,
-                                                                                          r'''$.option.a''',
-                                                                                        ).toString(),
+                                                                                        _selectedLang == 'en'
+                                                                                          ? getJsonField(categorywisequizItem, r'''$.option.a''').toString()
+                                                                                          : (_translatedOptions.isNotEmpty ? _translatedOptions[0] : getJsonField(categorywisequizItem, r'''$.option.a''').toString()),
                                                                                         style: FlutterFlowTheme.of(context).bodyMedium.override(
                                                                                               fontFamily: 'Roboto',
                                                                                               fontSize: 18.0,
@@ -1768,10 +1815,9 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                     child: Padding(
                                                                                       padding: EdgeInsets.all(16.0),
                                                                                       child: Text(
-                                                                                        getJsonField(
-                                                                                          categorywisequizItem,
-                                                                                          r'''$.option.b''',
-                                                                                        ).toString(),
+                                                                                        _selectedLang == 'en'
+                                                                                          ? getJsonField(categorywisequizItem, r'''$.option.b''').toString()
+                                                                                          : (_translatedOptions.isNotEmpty ? _translatedOptions[1] : getJsonField(categorywisequizItem, r'''$.option.b''').toString()),
                                                                                         style: FlutterFlowTheme.of(context).bodyMedium.override(
                                                                                               fontFamily: 'Roboto',
                                                                                               fontSize: 18.0,
@@ -1817,10 +1863,9 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                     child: Padding(
                                                                                       padding: EdgeInsets.all(16.0),
                                                                                       child: Text(
-                                                                                        getJsonField(
-                                                                                          categorywisequizItem,
-                                                                                          r'''$.option.c''',
-                                                                                        ).toString(),
+                                                                                        _selectedLang == 'en'
+                                                                                          ? getJsonField(categorywisequizItem, r'''$.option.c''').toString()
+                                                                                          : (_translatedOptions.isNotEmpty ? _translatedOptions[2] : getJsonField(categorywisequizItem, r'''$.option.c''').toString()),
                                                                                         style: FlutterFlowTheme.of(context).bodyMedium.override(
                                                                                               fontFamily: 'Roboto',
                                                                                               fontSize: 18.0,
@@ -1864,10 +1909,9 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                   child: Padding(
                                                                                     padding: EdgeInsets.all(16.0),
                                                                                     child: Text(
-                                                                                      getJsonField(
-                                                                                        categorywisequizItem,
-                                                                                        r'''$.option.d''',
-                                                                                      ).toString(),
+                                                                                      _selectedLang == 'en'
+                                                                                        ? getJsonField(categorywisequizItem, r'''$.option.d''').toString()
+                                                                                        : (_translatedOptions.isNotEmpty ? _translatedOptions[3] : getJsonField(categorywisequizItem, r'''$.option.d''').toString()),
                                                                                       style: FlutterFlowTheme.of(context).bodyMedium.override(
                                                                                             fontFamily: 'Roboto',
                                                                                             fontSize: 18.0,

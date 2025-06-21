@@ -126,7 +126,7 @@ class _SelfQuizResultWidgetState extends State<SelfQuizResultWidget> {
                             padding: EdgeInsetsDirectional.fromSTEB(
                                 0.0, 16.0, 0.0, 33.0),
                             child: Text(
-                              'You have completed quiz \nsuccessfully',
+                              'You have completed Test \nsuccessfully',
                               textAlign: TextAlign.center,
                               style: FlutterFlowTheme.of(context)
                                   .bodyMedium

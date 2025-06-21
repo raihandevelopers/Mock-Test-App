@@ -469,7 +469,7 @@ class _SelfChellengeWidgetState extends State<SelfChellengeWidget> {
 
                         safeSetState(() {});
                       },
-                      text: 'Start quiz',
+                      text: 'Start Test',
                       options: FFButtonOptions(
                         width: double.infinity,
                         height: 56.0,

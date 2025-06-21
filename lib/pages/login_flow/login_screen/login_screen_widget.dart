@@ -9,6 +9,10 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'login_screen_model.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 export 'login_screen_model.dart';
 
 class LoginScreenWidget extends StatefulWidget {
@@ -63,6 +67,61 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget>
     _model.dispose();
 
     super.dispose();
+  }
+
+  Future<UserCredential?> signInWithGoogle(BuildContext context) async {
+    print('DEBUG: Starting Google Sign-In');
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      print('DEBUG: Google user: $googleUser');
+      if (googleUser == null) {
+        print('DEBUG: User cancelled Google Sign-In');
+        return null;
+      }
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      print('DEBUG: Google Auth: $googleAuth');
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      print('DEBUG: Firebase credential created, signing in...');
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      print('DEBUG: Firebase sign-in successful: \\${userCredential.user}');
+      // Send token to backend
+      final idToken = await userCredential.user?.getIdToken();
+      final response = await http.post(
+        Uri.parse('https://quiz.deltospark.com/api/google-signin'), // <-- Change to your backend URL if needed
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'token': idToken,
+          'deviceId': 'flutter-app', // Replace with real deviceId if available
+        }),
+      );
+      print('Backend response: \\${response.body}');
+      // Extract and save token for authenticated API calls
+      final responseData = jsonDecode(response.body);
+      if (responseData['success'] == 1 && responseData['data'] != null && responseData['data']['token'] != null) {
+        FFAppState().loginToken = responseData['data']['token'];
+        FFAppState().isLogin = true;
+        // Save user details for later use (including userId)
+        if (responseData['data']['userDetails'] != null) {
+          FFAppState().userDetils = responseData['data']['userDetails'];
+          print('DEBUG: Saved userDetils: \\${FFAppState().userDetils}');
+        }
+        print('DEBUG: Saved loginToken: \\${FFAppState().loginToken}');
+      }
+    
+      // Navigate to home screen after successful Google sign-in
+      context.goNamed(HomeScreenWidget.routeName);
+      return userCredential;
+    } catch (e, stack) {
+      print('ERROR during Google Sign-In: $e');
+      print('STACKTRACE: $stack');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Google Sign-In failed: $e')),
+      );
+      return null;
+    }
   }
 
   @override
@@ -413,22 +472,7 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget>
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
-                                  SizedBox(height: 12),
-                                  Center(
-                                    child: TextButton(
-                                      onPressed: () {
-                                        context.goNamed(HomeScreenWidget.routeName);
-                                      },
-                                      child: Text(
-                                        'Skip',
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 15,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+
                                   SizedBox(height: 16),
                                   Row(
                                     children: [
@@ -441,23 +485,25 @@ class _LoginScreenWidgetState extends State<LoginScreenWidget>
                                       Expanded(child: Divider()),
                                     ],
                                   ),
-                                  SizedBox(height: 16),
+                                  SizedBox(height: 1),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      OutlinedButton.icon(
-                                        onPressed: () {},
-                                        icon: Icon(Icons.g_mobiledata,
-                                            color: Colors.red),
-                                        label: Text('Google'),
+                                      OutlinedButton(
+                                      onPressed: () async {
+     print('Google Sign-In button pressed');
+     await signInWithGoogle(context);
+   },
                                         style: OutlinedButton.styleFrom(
-                                          padding: EdgeInsets.symmetric(
-                                              vertical: 12,horizontal: 12),
-                                          side: BorderSide(
-                                              color: Colors.black12),
-                                          shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8)),
+                                          padding: EdgeInsets.zero,
+                                          side: BorderSide.none,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                          backgroundColor: Colors.transparent,
+                                        ),
+                                        child: Image.asset(
+                                          'assets/images/googlesign.png',
+                                          width: 150,
+                                          height: 150,
                                         ),
                                       ),
                                     ],

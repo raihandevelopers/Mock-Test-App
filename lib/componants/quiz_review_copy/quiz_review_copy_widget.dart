@@ -67,7 +67,7 @@ class _QuizReviewCopyWidgetState extends State<QuizReviewCopyWidget> {
                     ),
                   ),
                   Text(
-                    'Quiz Overview',
+                    'Test Overview',
                     style: FlutterFlowTheme.of(context).bodyMedium.override(
                           fontFamily: 'Roboto',
                           fontSize: 24.0,

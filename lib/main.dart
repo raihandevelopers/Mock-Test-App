@@ -12,6 +12,7 @@ import 'backend/firebase/firebase_config.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import 'flutter_flow/flutter_flow_util.dart';
 import 'index.dart';
+import 'pages/category_flow/category_viewall/current_affairs_widget.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -129,6 +130,7 @@ class _NavBarPageState extends State<NavBarPage> {
     final tabs = {
       'home_screen': HomeScreenWidget(),
       'category_viewall': CategoryViewallWidget(),
+      'current_affairs': CurrentAffairsWidget(),
       'profile_screen': ProfileScreenWidget(),
     };
     final currentIndex = tabs.keys.toList().indexOf(_currentPageName);
@@ -170,6 +172,18 @@ class _NavBarPageState extends State<NavBarPage> {
               size: 24.0,
             ),
             label: 'Categories',
+            tooltip: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              FFIcons.kgroup260861431, // Reuse or pick a suitable icon
+              size: 24.0,
+            ),
+            activeIcon: Icon(
+              FFIcons.kicon1, // Reuse or pick a suitable icon
+              size: 24.0,
+            ),
+            label: 'Current Affairs',
             tooltip: '',
           ),
           BottomNavigationBarItem(

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '/flutter_flow/flutter_flow_util.dart';
 import 'api_manager.dart';
@@ -2228,4 +2229,150 @@ class GetCarouselBannersCall {
         response,
         r'''$.data.message''',
       ));
+}
+
+class GoogleSigninCall {
+  static Future<ApiCallResponse> call({
+    required String token,
+    required String deviceId,
+  }) async {
+    try {
+      print('Starting GoogleSigninCall...');
+      final baseUrl = QuizGroup.getBaseUrl();
+      print('Base URL: $baseUrl');
+      print('Making Google Sign-In API call to: ${baseUrl}google-signin');
+      
+      // Force token refresh
+      final currentUser = FirebaseAuth.instance.currentUser;
+      print('Current user status: ${currentUser != null ? 'Logged in' : 'Not logged in'}');
+      
+      if (currentUser != null) {
+        print('Forcing token refresh...');
+        try {
+          final newToken = await currentUser.getIdToken(true); // Force refresh
+          if (newToken != null) {
+            print('New token obtained successfully');
+            token = newToken;
+          } else {
+            print('Warning: Token refresh returned null, using existing token');
+          }
+        } catch (e) {
+          print('Error refreshing token: $e');
+          print('Using existing token as fallback');
+        }
+      } else {
+        print('No current user found, using provided token');
+      }
+      
+      final requestBody = jsonEncode({
+        'token': token,
+        'deviceId': deviceId,
+      });
+      
+      print('Request body length: ${requestBody.length}');
+      print('Device ID: $deviceId');
+
+      print('Making API call...');
+      final response = await ApiManager.instance.makeApiCall(
+        callName: 'GoogleSignin',
+        apiUrl: '${baseUrl}google-signin',
+        callType: ApiCallType.POST,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        params: {},
+        body: requestBody,
+        bodyType: BodyType.JSON,
+        returnBody: true,
+        encodeBodyUtf8: true,
+        decodeUtf8: true,
+        cache: false,
+      );
+
+      print('API Response Status: ${response.statusCode}');
+      if (response.statusCode == -1) {
+        print('Connection failed. Please check if the server is running and accessible.');
+        throw Exception('Failed to connect to the server. Please check if the server is running and accessible.');
+      }
+      
+      if (response.jsonBody != null) {
+        print('API Response Body: ${response.jsonBody}');
+        try {
+          final responseData = jsonDecode(response.jsonBody);
+          print('Parsed response data: $responseData');
+        } catch (e) {
+          print('Error parsing response JSON: $e');
+        }
+      } else {
+        print('API Response Body is null');
+      }
+
+      print('GoogleSigninCall completed successfully');
+      return response;
+    } catch (e, stackTrace) {
+      print('Error in GoogleSigninCall: $e');
+      print('Stack trace: $stackTrace');
+      rethrow;
+    }
+  }
+
+  static bool success(dynamic response) {
+    try {
+      final responseData = jsonDecode(response.jsonBody);
+      return responseData['success'] == 1;
+    } catch (e) {
+      print('Error parsing success from response: $e');
+      return false;
+    }
+  }
+
+  static String message(dynamic response) {
+    try {
+      final responseData = jsonDecode(response.jsonBody);
+      return responseData['message'] ?? 'Unknown error occurred';
+    } catch (e) {
+      print('Error parsing message from response: $e');
+      return 'Error parsing response';
+    }
+  }
+
+  static String token(dynamic response) {
+    try {
+      final responseData = jsonDecode(response.jsonBody);
+      return responseData['data']['token'] ?? '';
+    } catch (e) {
+      print('Error parsing token from response: $e');
+      return '';
+    }
+  }
+
+  static Map<String, dynamic> userDetails(dynamic response) {
+    try {
+      final responseData = jsonDecode(response.jsonBody);
+      dynamic userData = responseData['data']['userDetails'];
+      if (userData is List) {
+        userData = userData.isNotEmpty ? userData[0] : null;
+      }
+      if (userData == null) {
+        return {};
+      }
+      return {
+        'id': userData['id']?.toString() ?? '',
+        'email': userData['email']?.toString() ?? '',
+        'firstname': userData['firstname']?.toString() ?? '',
+        'lastname': userData['lastname']?.toString() ?? '',
+        'username': userData['username']?.toString() ?? '',
+        'image': userData['image']?.toString() ?? '',
+        'phone': userData['phone']?.toString() ?? '',
+        'points': userData['points']?.toString() ?? '0',
+        'is_verified': userData['is_verified']?.toString() ?? '0',
+        'created_at': userData['created_at']?.toString() ?? '',
+        'updated_at': userData['updated_at']?.toString() ?? '',
+      };
+    } catch (e) {
+      print('Error parsing user details from response: $e');
+      return {};
+    }
+  }
 }

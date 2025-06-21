@@ -14,6 +14,7 @@ import 'index.dart'; // Imports other custom actions
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/foundation.dart';
 
 import 'dart:async';
 import 'dart:convert';
@@ -24,239 +25,79 @@ import 'package:intl/intl.dart';
 
 import 'dart:io' show Platform;
 
-Future firebaseInit() async {
-  // Add your function code here!
-  //Platform.isAndroid
-  //     ? await Firebase.initializeApp(
-  //     options: FirebaseOptions(
-  //  apiKey: FFAppConstants.apiKey,
-  //    authDomain: FFAppConstants.authDomain,
-  //      projectId: FFAppConstants.projectId,
-  //        storageBucket: FFAppConstants.storageBucket,
-  //  messagingSenderId: FFAppConstants.messagingSenderId,
-  //    appId: FFAppConstants.appId,
-  //      measurementId: FFAppConstants.measurementId,
-  //      ),
-  //      )
-  //: Platform.isIOS
-  ///      ? await Firebase.initializeApp()
-  //        : await Firebase.initializeApp(
-//              options: FirebaseOptions(
-  //    apiKey: FFAppConstants.apiKey,
-  //      authDomain: FFAppConstants.authDomain,
-  //        projectId: FFAppConstants.projectId,
-  //          storageBucket: FFAppConstants.storageBucket,
-  //  messagingSenderId: FFAppConstants.messagingSenderId,
-  //    appId: FFAppConstants.appId,
-  //      measurementId: FFAppConstants.measurementId,
-  //      ),
-  //      );
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
+Future<void> firebaseInit() async {
+  try {
+    await Firebase.initializeApp();
+    
+    // Initialize Firebase Messaging
   await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
     alert: true,
     badge: true,
     sound: true,
   );
 
+    // Handle background messages
   FirebaseMessaging.onBackgroundMessage(backgroundHandler);
 
+    // Get FCM token
   FirebaseMessaging.instance.getToken().then((token) {
-    FFAppState().tokenFcm = token!;
-
-    print("Token: $token");
+      debugPrint('FCM Token: $token');
   });
 
+    // Handle foreground messages
   FirebaseMessaging.onMessage.listen((event) {
-    Future.delayed(Duration.zero, () {
-      flutterLocalNotificationsPlugin.cancelAll();
-      _showNotification(event);
-    });
+      debugPrint('Got a message whilst in the foreground!');
+      debugPrint('Message data: ${event.data}');
+      if (event.notification != null) {
+        debugPrint('Message also contained a notification: ${event.notification}');
+      }
   });
+
+    // Handle when app is opened from notification
   FirebaseMessaging.onMessageOpenedApp.listen((event) {});
 
+    // Check if app was opened from notification
   FirebaseMessaging.instance.getInitialMessage().then((value) {});
+
+    debugPrint('Firebase initialized successfully');
+  } catch (e) {
+    debugPrint('Error initializing Firebase: $e');
+  }
 }
 
 Future<void> backgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-  // await setupFlutterNotifications();
-
-  Future.delayed(Duration.zero, () {
-    flutterLocalNotificationsPlugin.cancelAll();
-    _showNotification(message);
-  });
+  debugPrint('Handling a background message: ${message.messageId}');
 }
 
 Future<void> _showNotification(RemoteMessage message) async {
-  Map mapData = {
-    "link": message.notification!.android!.link,
-    "action": message.notification!.android!.clickAction,
-    "storyId": message.data["story_id"]
-  };
-
-  String payload = json.encode(mapData);
   const AndroidNotificationDetails androidNotificationDetails =
       AndroidNotificationDetails(
-    'be.fit.workout.fitness',
-    'big text channel name',
-    channelDescription: 'big text channel description',
+    'high_importance_channel',
+    'High Importance Notifications',
+    channelDescription: 'This channel is used for important notifications.',
     importance: Importance.max,
     priority: Priority.high,
+    ticker: 'ticker',
   );
-
-  // DateTime now = DateTime.now();
-
-  // String formattedDate = DateFormat('yyyy-MM-dd').format(now);
-
-  // String formattedTime = DateFormat('hh:mm:ss').format(now);
-
-  // await NotificationRecord.collection.doc().set(createNotificationRecordData(
-  //       title: message.notification!.title,
-  //       description: message.notification!.body,
-  //       image: message.notification!.android!.imageUrl,
-  //       createdAt: formattedTime,
-  //       updatedAt: DateTime.now().toString(),
-  //       createdDate: formattedDate,
-  //       read: false,
-  //     ));
 
   const NotificationDetails notificationDetails =
       NotificationDetails(android: androidNotificationDetails);
-  await flutterLocalNotificationsPlugin.show(1, message.notification!.title,
-      message.notification!.body!, notificationDetails,
-      payload: payload);
 
-  _configureSelectNotificationSubject(message);
-  _configureDidReceiveLocalNotificationSubject(message);
+  await flutterLocalNotificationsPlugin.show(
+    0,
+    message.notification?.title ?? 'New Notification',
+    message.notification?.body ?? '',
+    notificationDetails,
+  );
 }
 
 void _configureDidReceiveLocalNotificationSubject(RemoteMessage message) {
-  didReceiveLocalNotificationStream.stream
-      .listen((ReceivedNotification receivedNotification) async {
-    Map payload = json.decode(receivedNotification.payload!);
-
-    await Firebase.initializeApp();
-
-    String action = payload["action"];
-
-    // DateTime now = DateTime.now();
-
-    // String formattedDate = DateFormat('yyyy-MM-dd').format(now);
-
-    // String formattedTime = DateFormat('hh:mm:ss').format(now);
-
-    if (action == "FLUTTER_NOTIFICATION_CLICK") {
-      debugPrint(
-          "Notification clicked! by darshan FLUTTER_NOTIFICATION_CLICK 1");
-      // try {
-      //   await NotificationRecord.collection
-      //       .doc()
-      //       .update(createNotificationRecordData(
-      //         title: message.notification!.title,
-      //         description: message.notification!.body,
-      //         image: message.notification!.android!.imageUrl,
-      //         createdAt: formattedTime,
-      //         updatedAt: DateTime.now().toString(),
-      //         createdDate: formattedDate,
-      //         read: true,
-      //       ))
-      //       .then(
-      //     (value) {
-      //       debugPrint("Notification updated to Firestore!");
-      //     },
-      //   );
-      // } catch (e) {
-      //   print("dddddd:$e");
-      // }
-    } else if (action == "FLUTTER_NOTIFICATION_CLICK_STORY") {
-      debugPrint(
-          "Notification clicked! by darshan FLUTTER_NOTIFICATION_CLICK_STORY 1");
-      // try {
-      //   await NotificationRecord.collection
-      //       .doc()
-      //       .update(createNotificationRecordData(
-      //         title: message.notification!.title,
-      //         description: message.notification!.body,
-      //         image: message.notification!.android!.imageUrl,
-      //         createdAt: formattedTime,
-      //         updatedAt: DateTime.now().toString(),
-      //         createdDate: formattedDate,
-      //         read: true,
-      //       ))
-      //       .then(
-      //     (value) {
-      //       debugPrint("Notification updated to Firestore!");
-      //     },
-      //   );
-      // } catch (e) {
-      //   print("dddddd:$e");
-      // }
-    }
-  });
+  _showNotification(message);
 }
 
 Future<void> _configureSelectNotificationSubject(RemoteMessage message) async {
-  selectNotificationStream.stream.listen((receive) async {
-    Map payload = json.decode(receive!);
-
-    String action = payload["action"];
-
-    await Firebase.initializeApp();
-
-    // DateTime now = DateTime.now();
-
-    // String formattedDate = DateFormat('yyyy-MM-dd').format(now);
-
-    // String formattedTime = DateFormat('hh:mm:ss').format(now);
-
-    if (action == "FLUTTER_NOTIFICATION_CLICK") {
-      debugPrint(
-          "Notification clicked! by darshan FLUTTER_NOTIFICATION_CLICK 2");
-      //   try {
-      //     await NotificationRecord.collection
-      //         .doc()
-      //         .update(createNotificationRecordData(
-      //           title: message.notification!.title,
-      //           description: message.notification!.body,
-      //           image: message.notification!.android!.imageUrl,
-      //           createdAt: formattedTime,
-      //           updatedAt: DateTime.now().toString(),
-      //           createdDate: formattedDate,
-      //           read: true,
-      //         ))
-      //         .then(
-      //       (value) {
-      //         debugPrint("Notification updated to Firestore!");
-      //       },
-      //     );
-      //   } catch (e) {
-      //     print("dddddd:$e");
-      //   }
-    } else if (action == "FLUTTER_NOTIFICATION_CLICK_STORY") {
-      debugPrint(
-          "Notification clicked! by darshan FLUTTER_NOTIFICATION_CLICK_STORY 2");
-
-      // try {
-      //   await NotificationRecord.collection
-      //       .doc()
-      //       .update(createNotificationRecordData(
-      //         title: message.notification!.title,
-      //         description: message.notification!.body,
-      //         image: message.notification!.android!.imageUrl,
-      //         createdAt: formattedTime,
-      //         updatedAt: DateTime.now().toString(),
-      //         createdDate: formattedDate,
-      //         read: true,
-      //       ))
-      //       .then(
-      //     (value) {
-      //       debugPrint("Notification updated to Firestore!");
-      //     },
-      //   );
-      // } catch (e) {
-      //   print("dddddd:$e");
-      // }
-    }
-  });
-  // }
+  await _showNotification(message);
 }
