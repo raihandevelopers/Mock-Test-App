@@ -300,6 +300,86 @@ class _ProfileScreenWidgetState extends State<ProfileScreenWidget> {
                               hoverColor: Colors.transparent,
                               highlightColor: Colors.transparent,
                               onTap: () async {
+                                context.pushNamed('books_screen');
+                              },
+                              child: Container(
+                                width: 100.0,
+                                height: 64.0,
+                                decoration: BoxDecoration(
+                                  color: FlutterFlowTheme.of(context)
+                                      .secondaryBackground,
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                                child: Padding(
+                                  padding: EdgeInsetsDirectional.fromSTEB(
+                                      0.0, 8.0, 0.0, 8.0),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: [
+                                      Container(
+                                        width: 48.0,
+                                        height: 48.0,
+                                        decoration: BoxDecoration(
+                                          color: FlutterFlowTheme.of(context)
+                                              .lightGrey,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Align(
+                                          alignment:
+                                              AlignmentDirectional(0.0, 0.0),
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(8.0),
+                                            child: Icon(
+                                              Icons.book_outlined,
+                                              size: 24.0,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          'Books',
+                                          style: FlutterFlowTheme.of(context)
+                                              .bodyMedium
+                                              .override(
+                                                fontFamily: 'Roboto',
+                                                fontSize: 17.0,
+                                                letterSpacing: 0.0,
+                                                useGoogleFonts: false,
+                                                lineHeight: 1.5,
+                                              ),
+                                        ),
+                                      ),
+                                      ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(8.0),
+                                        child: SvgPicture.asset(
+                                          'assets/images/arrow_right.svg',
+                                          width: 20.0,
+                                          height: 20.0,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ]
+                                        .divide(SizedBox(width: 16.0))
+                                        .addToStart(SizedBox(width: 8.0))
+                                        .addToEnd(SizedBox(width: 8.0)),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        if (FFAppState().isLogin == true)
+                          Padding(
+                            padding: EdgeInsetsDirectional.fromSTEB(
+                                16.0, 0.0, 16.0, 16.0),
+                            child: InkWell(
+                              splashColor: Colors.transparent,
+                              focusColor: Colors.transparent,
+                              hoverColor: Colors.transparent,
+                              highlightColor: Colors.transparent,
+                              onTap: () async {
                                 context.pushNamed(
                                     NotificationScreenWidget.routeName);
                               },
@@ -450,6 +530,7 @@ class _ProfileScreenWidgetState extends State<ProfileScreenWidget> {
                                       .addToEnd(SizedBox(width: 8.0)),
                                 ),
                               ),
+                              
                             ),
                           ),
                         ),

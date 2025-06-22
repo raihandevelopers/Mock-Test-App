@@ -73,6 +73,7 @@ class _CurrentAffairsWidgetState extends State<CurrentAffairsWidget>
                     return FutureBuilder<ApiCallResponse>(
                       future: GetquizbycategoryCall.call(
                         categoryId: currentAffairsCategoryId,
+                        token: FFAppState().loginToken,
                       ),
                       builder: (context, snapshot) {
                         if (!snapshot.hasData) {

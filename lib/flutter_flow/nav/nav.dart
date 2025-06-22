@@ -10,6 +10,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 
 import '/index.dart';
 import '/pages/category_flow/category_viewall/current_affairs_widget.dart';
+import '/pages/profile_flow/books_screen/books_screen_widget.dart';
 
 export 'package:go_router/go_router.dart';
 export 'serialization_util.dart';
@@ -110,6 +111,11 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           name: TermsConditionScreenWidget.routeName,
           path: TermsConditionScreenWidget.routePath,
           builder: (context, params) => TermsConditionScreenWidget(),
+        ),
+        FFRoute(
+          name: 'books_screen',
+          path: '/booksScreen',
+          builder: (context, params) => BooksScreenWidget(),
         ),
         FFRoute(
           name: SignupScreenWidget.routeName,

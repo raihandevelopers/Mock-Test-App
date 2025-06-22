@@ -186,7 +186,7 @@ class _CategoryViewallWidgetState extends State<CategoryViewallWidget>
                                                         )
                                                         ?.toList() ??
                                                     [];
-
+                                            categoryList.removeWhere((category) => getJsonField(category, r'''$._id''').toString() == '6855c7f44a6a5ab0e8254dc6');
                                             return Wrap(
                                               spacing: 16.0,
                                               runSpacing: 16.0,

@@ -959,12 +959,12 @@ class FFAppState extends ChangeNotifier {
 
   Future<void> _saveLoginToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('loginToken', token);
+    await prefs.setString('ff_loginToken', token);
   }
 
   Future<void> loadLoginToken() async {
     final prefs = await SharedPreferences.getInstance();
-    _loginToken = prefs.getString('loginToken') ?? '';
+    _loginToken = prefs.getString('ff_loginToken') ?? '';
     notifyListeners();
   }
 

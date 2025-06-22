@@ -2042,16 +2042,18 @@ class GetquizbycategoryCall {
   static Future<ApiCallResponse> call({
     String? baseURL,
     String? categoryId = '',
+    String? token,
   }) async {
     baseURL ??= FFAppConstants.baseURL;
     print('GetquizbycategoryCall - Base URL: $baseURL');
     print('GetquizbycategoryCall - Category ID: $categoryId');
 
-    final ffApiRequestBody = '''\n{\n  \"categoryId\": \"${escapeStringForJson(categoryId)}\"\n}''';
+    final ffApiRequestBody = '''
+{
+  "categoryId": "${escapeStringForJson(categoryId)}"
+}''';
     print('GetquizbycategoryCall - Request Body: $ffApiRequestBody');
-    
-    // Get the auth token from FFAppState
-    final token = FFAppState().loginToken;
+
     print('GetquizbycategoryCall - Auth Token: $token');
 
     try {

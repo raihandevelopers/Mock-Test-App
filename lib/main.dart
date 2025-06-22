@@ -176,11 +176,11 @@ class _NavBarPageState extends State<NavBarPage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(
-              FFIcons.kgroup260861431, // Reuse or pick a suitable icon
+              Icons.article_outlined,
               size: 24.0,
             ),
             activeIcon: Icon(
-              FFIcons.kicon1, // Reuse or pick a suitable icon
+              Icons.article,
               size: 24.0,
             ),
             label: 'Current Affairs',

@@ -389,7 +389,7 @@ class _QuizResultWidgetState extends State<QuizResultWidget> {
                                                                             -1.0),
                                                                     child:
                                                                         AutoSizeText(
-                                                                      'Total points',
+                                                                      'Total Mark',
                                                                       textAlign:
                                                                           TextAlign
                                                                               .center,

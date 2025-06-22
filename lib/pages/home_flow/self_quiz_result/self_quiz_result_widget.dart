@@ -380,7 +380,7 @@ class _SelfQuizResultWidgetState extends State<SelfQuizResultWidget> {
                                                                             -1.0),
                                                                         child:
                                                                             Text(
-                                                                          'Total points',
+                                                                          'Total Mark',
                                                                           maxLines:
                                                                               1,
                                                                           style: FlutterFlowTheme.of(context)

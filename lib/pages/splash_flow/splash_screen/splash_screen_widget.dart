@@ -68,13 +68,14 @@ class _SplashScreenWidgetState extends State<SplashScreenWidget>
         }
 
         print('Checking app initialization status...');
-        print('isInite: ${FFAppState().isInite}');
-        print('isLogin: ${FFAppState().isLogin}');
+        print('isInite: \\${FFAppState().isInite}');
+        print('isLogin: \\${FFAppState().isLogin}');
+        print('loginToken: \\${FFAppState().loginToken}');
         
         if (FFAppState().isInite == true) {
           print('App already initialized, checking login status...');
-          if (FFAppState().isLogin == true) {
-            print('User is logged in, proceeding to home screen...');
+          if (FFAppState().isLogin == true && FFAppState().loginToken.isNotEmpty) {
+            print('User is logged in and token is present, proceeding to home screen...');
             // Skip ad validation and set default values
             FFAppState().isBannerAd = 0;
             FFAppState().isInterstialAd = 0;
@@ -84,7 +85,7 @@ class _SplashScreenWidgetState extends State<SplashScreenWidget>
             print('Navigating to home screen...');
             context.goNamed(HomeScreenWidget.routeName);
           } else {
-            print('User is not logged in, proceeding to login screen...');
+            print('User is not logged in or token is missing, proceeding to login screen...');
             context.goNamed(LoginScreenWidget.routeName);
           }
         } else {
@@ -249,9 +250,9 @@ class _SplashScreenWidgetState extends State<SplashScreenWidget>
           top: true,
           child: Align(
             alignment: AlignmentDirectional(0.0, 0.0),
-            child: Column(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 ClipRRect(
@@ -263,20 +264,18 @@ class _SplashScreenWidgetState extends State<SplashScreenWidget>
                     fit: BoxFit.cover,
                   ),
                 ),
-                Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(0.0, 13.0, 0.0, 0.0),
-                  child: Text(
-                    'Mock Test',
-                    style: FlutterFlowTheme.of(context).bodyMedium.override(
-                          fontFamily: 'Roboto',
-                          color: Color(0xFF201F1F),
-                          fontSize: 28.0,
-                          letterSpacing: 0.0,
-                          fontWeight: FontWeight.bold,
-                          useGoogleFonts: false,
-                          lineHeight: 1.5,
-                        ),
-                  ),
+                SizedBox(width: 20.0),
+                Text(
+                  'Mock Station',
+                  style: FlutterFlowTheme.of(context).bodyMedium.override(
+                        fontFamily: 'Roboto',
+                        color: Color(0xFF201F1F),
+                        fontSize: 28.0,
+                        letterSpacing: 0.0,
+                        fontWeight: FontWeight.bold,
+                        useGoogleFonts: false,
+                        lineHeight: 1.5,
+                      ),
                 ),
               ],
             ).animateOnPageLoad(animationsMap['columnOnPageLoadAnimation']!),

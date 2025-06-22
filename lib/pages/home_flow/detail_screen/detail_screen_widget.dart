@@ -348,7 +348,7 @@ class _DetailScreenWidgetState extends State<DetailScreenWidget>
                                                         ),
                                                   ),
                                                   TextSpan(
-                                                    text: '  numbers',
+                                                    text: '  Mark',
                                                     style: TextStyle(),
                                                   )
                                                 ],
@@ -441,7 +441,7 @@ class _DetailScreenWidgetState extends State<DetailScreenWidget>
                                                         ),
                                                   ),
                                                   TextSpan(
-                                                    text: ' numbers',
+                                                    text: ' Mark',
                                                     style: TextStyle(),
                                                   )
                                                 ],

@@ -685,6 +685,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget>
                                                                       )
                                                                       ?.toList() ??
                                                                   []);
+                                                            allCategories.removeWhere((category) => getJsonField(category, r'''$._id''').toString() == '6855c7f44a6a5ab0e8254dc6');
                                                             return Column(
                                                               crossAxisAlignment: CrossAxisAlignment.start,
                                                               children: allCategories.asMap().entries.map((entry) {
@@ -743,141 +744,176 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget>
                                                                     Container(
                                                                       width: double.infinity,
                                                                       height: 105.0,
-                                                                      child: FutureBuilder<ApiCallResponse>(
-                                                                        future: GetquizbycategoryCall.call(categoryId: categoryId),
-                                                                        builder: (context, snapshot) {
-                                                                          if (!snapshot.hasData) {
-                                                                            return Center(
-                                                                              child: SizedBox(
-                                                                                width: 30.0,
-                                                                                height: 30.0,
-                                                                                child: CircularProgressIndicator(
-                                                                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                                                                    FlutterFlowTheme.of(context).primary,
-                                                                                  ),
-                                                                                ),
+                                                                      child: (FFAppState().isLogin &&
+                                                                              FFAppState().loginToken != null &&
+                                                                              FFAppState().loginToken!.isNotEmpty)
+                                                                          ? FutureBuilder<ApiCallResponse>(
+                                                                              future: GetquizbycategoryCall.call(
+                                                                                categoryId: categoryId,
+                                                                                token: FFAppState().loginToken,
                                                                               ),
-                                                                            );
-                                                                          }
-                                                                          final quizResponse = snapshot.data!;
-                                                                          final quizzes = GetquizbycategoryCall.quizDetailsList(quizResponse.jsonBody)?.toList() ?? [];
-                                                                          // Store quizzes for this category in the map
-                                                                          homePageQuizzes[categoryId] = quizzes;
-                                                                          if (quizzes.isEmpty) {
-                                                                            return Center(
+                                                                              builder: (context, snapshot) {
+                                                                                if (!snapshot.hasData) {
+                                                                                  return Center(
+                                                                                    child: SizedBox(
+                                                                                      width: 30.0,
+                                                                                      height: 30.0,
+                                                                                      child: CircularProgressIndicator(
+                                                                                        valueColor:
+                                                                                            AlwaysStoppedAnimation<Color>(
+                                                                                          FlutterFlowTheme.of(context).primary,
+                                                                                        ),
+                                                                                      ),
+                                                                                    ),
+                                                                                  );
+                                                                                }
+                                                                                final quizResponse = snapshot.data!;
+                                                                                final quizzes = GetquizbycategoryCall.quizDetailsList(
+                                                                                        quizResponse.jsonBody)
+                                                                                    ?.toList() ??
+                                                                                [];
+                                                                                homePageQuizzes[categoryId] = quizzes;
+                                                                                if (quizzes.isEmpty) {
+                                                                                  return Center(
+                                                                                    child: Text(
+                                                                                      'No content available',
+                                                                                      style: FlutterFlowTheme.of(context).bodyMedium,
+                                                                                    ),
+                                                                                  );
+                                                                                }
+                                                                                return ListView.separated(
+                                                                                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                                                                                  scrollDirection: Axis.horizontal,
+                                                                                  itemCount: quizzes.length,
+                                                                                  separatorBuilder: (_, __) => SizedBox(width: 16.0),
+                                                                                  itemBuilder: (context, index) {
+                                                                                    final quiz = quizzes[index];
+                                                                                    return InkWell(
+                                                                                      splashColor: Colors.transparent,
+                                                                                      focusColor: Colors.transparent,
+                                                                                      hoverColor: Colors.transparent,
+                                                                                      highlightColor: Colors.transparent,
+                                                                                      onTap: () async {
+                                                                                        context.pushNamed(
+                                                                                          DetailScreenWidget.routeName,
+                                                                                          queryParameters: {
+                                                                                            'catId': serializeParam(
+                                                                                              categoryId,
+                                                                                              ParamType.String,
+                                                                                            ),
+                                                                                            'name': serializeParam(
+                                                                                              getJsonField(quiz, r'''$.name''')
+                                                                                                  .toString(),
+                                                                                              ParamType.String,
+                                                                                            ),
+                                                                                            'image': serializeParam(
+                                                                                              '${FFAppConstants.imageBaseURL}${getJsonField(quiz, r'''$.image''').toString()}',
+                                                                                              ParamType.String,
+                                                                                            ),
+                                                                                            'quizTime': serializeParam(
+                                                                                              getJsonField(quiz,
+                                                                                                      r'''$.minutes_per_quiz''')
+                                                                                                  .toString(),
+                                                                                              ParamType.String,
+                                                                                            ),
+                                                                                            'description': serializeParam(
+                                                                                              getJsonField(quiz,
+                                                                                                      r'''$.description''')
+                                                                                                  .toString(),
+                                                                                              ParamType.String,
+                                                                                            ),
+                                                                                            'quizID': serializeParam(
+                                                                                              getJsonField(quiz, r'''$._id''')
+                                                                                                  .toString(),
+                                                                                              ParamType.String,
+                                                                                            ),
+                                                                                            'ques': serializeParam(
+                                                                                              getJsonField(quiz,
+                                                                                                  r'''$.total_questions'''),
+                                                                                              ParamType.int,
+                                                                                            ),
+                                                                                            'title': serializeParam(
+                                                                                              getJsonField(quiz, r'''$.name''')
+                                                                                                  .toString(),
+                                                                                              ParamType.String,
+                                                                                            ),
+                                                                                            'timerStatus': serializeParam(
+                                                                                              getJsonField(quiz,
+                                                                                                  r'''$.timer_status'''),
+                                                                                              ParamType.int,
+                                                                                            ),
+                                                                                          }.withoutNulls,
+                                                                                        );
+                                                                                      },
+                                                                                      child: Container(
+                                                                                        width: 87.0,
+                                                                                        height: 87.0,
+                                                                                        decoration: BoxDecoration(
+                                                                                          color:
+                                                                                              FlutterFlowTheme.of(context).primaryBackground,
+                                                                                          borderRadius: BorderRadius.circular(12.0),
+                                                                                        ),
+                                                                                        child: Column(
+                                                                                          mainAxisSize: MainAxisSize.max,
+                                                                                          mainAxisAlignment: MainAxisAlignment.center,
+                                                                                          children: [
+                                                                                            Container(
+                                                                                              width: 48.0,
+                                                                                              height: 48.0,
+                                                                                              decoration: BoxDecoration(
+                                                                                                color: FlutterFlowTheme.of(context)
+                                                                                                    .primaryBackground,
+                                                                                                borderRadius:
+                                                                                                    BorderRadius.circular(8.0),
+                                                                                              ),
+                                                                                              child: ClipRRect(
+                                                                                                borderRadius:
+                                                                                                    BorderRadius.circular(0.0),
+                                                                                                child: CachedNetworkImage(
+                                                                                                  fadeInDuration:
+                                                                                                      Duration(milliseconds: 200),
+                                                                                                  fadeOutDuration:
+                                                                                                      Duration(milliseconds: 200),
+                                                                                                  imageUrl:
+                                                                                                      '${FFAppConstants.imageBaseURL}${getJsonField(quiz, r'''$.image''').toString()}',
+                                                                                                  width: 48.0,
+                                                                                                  height: 48.0,
+                                                                                                  fit: BoxFit.cover,
+                                                                                                ),
+                                                                                              ),
+                                                                                            ),
+                                                                                            Padding(
+                                                                                              padding: EdgeInsetsDirectional.fromSTEB(
+                                                                                                  0.0, 8.0, 0.0, 0.0),
+                                                                                              child: Text(
+                                                                                                getJsonField(quiz, r'''$.name''')
+                                                                                                    .toString(),
+                                                                                                textAlign: TextAlign.center,
+                                                                                                maxLines: 2,
+                                                                                                style: FlutterFlowTheme.of(context)
+                                                                                                    .bodyMedium
+                                                                                                    .override(
+                                                                                                      fontFamily: 'Roboto',
+                                                                                                      fontSize: 14.0,
+                                                                                                      letterSpacing: 0.0,
+                                                                                                      useGoogleFonts: false,
+                                                                                                    ),
+                                                                                              ),
+                                                                                            ),
+                                                                                          ],
+                                                                                        ),
+                                                                                      ),
+                                                                                    );
+                                                                                  },
+                                                                                );
+                                                                              },
+                                                                            )
+                                                                          : Center(
                                                                               child: Text(
-                                                                                'No content available',
+                                                                                'Login to see quizzes',
                                                                                 style: FlutterFlowTheme.of(context).bodyMedium,
                                                                               ),
-                                                                            );
-                                                                          }
-                                                                          return ListView.separated(
-                                                                            padding: EdgeInsets.symmetric(horizontal: 16.0),
-                                                                            scrollDirection: Axis.horizontal,
-                                                                            itemCount: quizzes.length,
-                                                                            separatorBuilder: (_, __) => SizedBox(width: 16.0),
-                                                                            itemBuilder: (context, index) {
-                                                                              final quiz = quizzes[index];
-                                                                              return InkWell(
-                                                                                splashColor: Colors.transparent,
-                                                                                focusColor: Colors.transparent,
-                                                                                hoverColor: Colors.transparent,
-                                                                                highlightColor: Colors.transparent,
-                                                                                onTap: () async {
-                                                                                  context.pushNamed(
-                                                                                    DetailScreenWidget.routeName,
-                                                                                    queryParameters: {
-                                                                                      'catId': serializeParam(
-                                                                                        categoryId,
-                                                                                        ParamType.String,
-                                                                                      ),
-                                                                                      'name': serializeParam(
-                                                                                        getJsonField(quiz, r'''$.name''').toString(),
-                                                                                        ParamType.String,
-                                                                                      ),
-                                                                                      'image': serializeParam(
-                                                                                        '${FFAppConstants.imageBaseURL}${getJsonField(quiz, r'''$.image''').toString()}',
-                                                                                        ParamType.String,
-                                                                                      ),
-                                                                                      'quizTime': serializeParam(
-                                                                                        getJsonField(quiz, r'''$.minutes_per_quiz''').toString(),
-                                                                                        ParamType.String,
-                                                                                      ),
-                                                                                      'description': serializeParam(
-                                                                                        getJsonField(quiz, r'''$.description''').toString(),
-                                                                                        ParamType.String,
-                                                                                      ),
-                                                                                      'quizID': serializeParam(
-                                                                                        getJsonField(quiz, r'''$._id''').toString(),
-                                                                                        ParamType.String,
-                                                                                      ),
-                                                                                      'ques': serializeParam(
-                                                                                        getJsonField(quiz, r'''$.total_questions'''),
-                                                                                        ParamType.int,
-                                                                                      ),
-                                                                                      'title': serializeParam(
-                                                                                        getJsonField(quiz, r'''$.name''').toString(),
-                                                                                        ParamType.String,
-                                                                                      ),
-                                                                                      'timerStatus': serializeParam(
-                                                                                        getJsonField(quiz, r'''$.timer_status'''),
-                                                                                        ParamType.int,
-                                                                                      ),
-                                                                                    }.withoutNulls,
-                                                                                  );
-                                                                                },
-                                                                                child: Container(
-                                                                                  width: 87.0,
-                                                                                  height: 87.0,
-                                                                                  decoration: BoxDecoration(
-                                                                                    color: FlutterFlowTheme.of(context).primaryBackground,
-                                                                                    borderRadius: BorderRadius.circular(12.0),
-                                                                                  ),
-                                                                                  child: Column(
-                                                                                    mainAxisSize: MainAxisSize.max,
-                                                                                    mainAxisAlignment: MainAxisAlignment.center,
-                                                                                    children: [
-                                                                                      Container(
-                                                                                        width: 48.0,
-                                                                                        height: 48.0,
-                                                                                        decoration: BoxDecoration(
-                                                                                          color: FlutterFlowTheme.of(context).primaryBackground,
-                                                                                          borderRadius: BorderRadius.circular(8.0),
-                                                                                        ),
-                                                                                        child: ClipRRect(
-                                                                                          borderRadius: BorderRadius.circular(0.0),
-                                                                                          child: CachedNetworkImage(
-                                                                                            fadeInDuration: Duration(milliseconds: 200),
-                                                                                            fadeOutDuration: Duration(milliseconds: 200),
-                                                                                            imageUrl: '${FFAppConstants.imageBaseURL}${getJsonField(quiz, r'''$.image''').toString()}',
-                                                                                            width: 48.0,
-                                                                                            height: 48.0,
-                                                                                            fit: BoxFit.cover,
-                                                                                          ),
-                                                                                        ),
-                                                                                      ),
-                                                                                      Padding(
-                                                                                        padding: EdgeInsetsDirectional.fromSTEB(0.0, 8.0, 0.0, 0.0),
-                                                                                        child: Text(
-                                                                                          getJsonField(quiz, r'''$.name''').toString(),
-                                                                                          textAlign: TextAlign.center,
-                                                                                          maxLines: 2,
-                                                                                          style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                                fontFamily: 'Roboto',
-                                                                                                fontSize: 14.0,
-                                                                                                letterSpacing: 0.0,
-                                                                                                useGoogleFonts: false,
-                                                                                              ),
-                                                                                        ),
-                                                                                      ),
-                                                                                    ],
-                                                                                  ),
-                                                                                ),
-                                                                              );
-                                                                            },
-                                                                          );
-                                                                        },
-                                                                      ),
+                                                                            ),
                                                                     ),
                                                                   ],
                                                                 );
