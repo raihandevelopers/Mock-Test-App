@@ -245,40 +245,20 @@ class _SplashScreenWidgetState extends State<SplashScreenWidget>
       },
       child: Scaffold(
         key: scaffoldKey,
-        backgroundColor: FlutterFlowTheme.of(context).secondary,
+          backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
         body: SafeArea(
           top: true,
-          child: Align(
-            alignment: AlignmentDirectional(0.0, 0.0),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16.0),
-                  child: Image.asset(
-                    'assets/images/mocktest_logo.png',
-                    width: 98.0,
-                    height: 98.0,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                SizedBox(width: 20.0),
-                Text(
-                  'Mock Station',
-                  style: FlutterFlowTheme.of(context).bodyMedium.override(
-                        fontFamily: 'Roboto',
-                        color: Color(0xFF201F1F),
-                        fontSize: 28.0,
-                        letterSpacing: 0.0,
-                        fontWeight: FontWeight.bold,
-                        useGoogleFonts: false,
-                        lineHeight: 1.5,
-                      ),
-                ),
-              ],
-            ).animateOnPageLoad(animationsMap['columnOnPageLoadAnimation']!),
+          child: Container(
+            color: Colors.white,
+            alignment: Alignment.center,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.0),
+              child: Image.asset(
+                'assets/images/mock_test_horizontal_logo.png',
+                width: double.infinity,
+                fit: BoxFit.contain,
+              ),
+            ),
           ),
         ),
       ),

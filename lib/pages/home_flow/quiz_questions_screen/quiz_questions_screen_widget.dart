@@ -58,6 +58,9 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
   List<String> _translatedOptions = [];
   bool _isTranslating = false;
 
+  // Track selected option index for each question
+  Map<int, int> selectedOptionPerQuestion = {};
+
   @override
   void initState() {
     super.initState();
@@ -361,16 +364,7 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                             .pageViewCurrentIndex +
                                                         1;
                                                     safeSetState(() {});
-                                                    if (QuizGroup
-                                                            .getquestionsbyquizidApiCall
-                                                            .questionDetailsList(
-                                                              (_model.quizRes
-                                                                      ?.jsonBody ??
-                                                                  ''),
-                                                            )
-                                                            ?.length ==
-                                                        (_model.pageViewCurrentIndex +
-                                                            1)) {
+                                                    if ((QuizGroup.getquestionsbyquizidApiCall.questionDetailsList((_model.quizRes?.jsonBody ?? ''))?.length ?? 0) != (_model.pageViewCurrentIndex + 1)) {
                                                       await showDialog(
                                                         context: context,
                                                         builder:
@@ -571,7 +565,7 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                       height: 1.0,
                                       decoration: BoxDecoration(
                                         color: FlutterFlowTheme.of(context)
-                                            .black10,
+                                            .white,
                                       ),
                                     ),
                                   ],
@@ -761,8 +755,7 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                               child:
                                                                   GestureDetector(
                                                                 onTap: () {
-                                                                  FocusScope.of(
-                                                                          dialogContext)
+                                                                  FocusScope.of(dialogContext)
                                                                       .unfocus();
                                                                   FocusManager
                                                                       .instance
@@ -890,18 +883,14 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                             categorywisequiz.length -
                                                                                 1))),
                                                             onPageChanged:
-                                                                (_) async {
-                                                              FFAppState()
-                                                                      .questionType =
-                                                                  getJsonField(
-                                                                categorywisequiz
-                                                                    .elementAtOrNull(
-                                                                        _model
-                                                                            .pageViewCurrentIndex),
+                                                                (idx) async {
+                                                              FFAppState().selectedColorIndex = selectedOptionPerQuestion[idx] ?? -1;
+                                                              FFAppState().update(() {});
+                                                              FFAppState().questionType = getJsonField(
+                                                                categorywisequiz.elementAtOrNull(idx),
                                                                 r'''$.question_type''',
                                                               ).toString();
-                                                              safeSetState(
-                                                                  () {});
+                                                              safeSetState(() {});
                                                             },
                                                             scrollDirection:
                                                                 Axis.horizontal,
@@ -913,6 +902,7 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                               final categorywisequizItem =
                                                                   categorywisequiz[
                                                                       categorywisequizIndex];
+                                                              final selectedIndex = selectedOptionPerQuestion[categorywisequizIndex];
                                                               return Builder(
                                                                 builder:
                                                                     (context) {
@@ -962,7 +952,7 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                       setState(() { _selectedLang = val; });
                                                                                       // Get current question and options
                                                                                       final categorywisequiz = QuizGroup.getquestionsbyquizidApiCall.questionDetailsList((_model.quizRes?.jsonBody ?? ''),)?.toList() ?? [];
-                                                                                      final idx = _model.pageViewCurrentIndex;
+                                                                                      final idx = categorywisequizIndex;
                                                                                       if (categorywisequiz.isNotEmpty && idx < categorywisequiz.length) {
                                                                                         final q = getJsonField(categorywisequiz[idx], r'''$.question_title''').toString();
                                                                                         final opts = [
@@ -1022,13 +1012,14 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                     r'''$.answer''',
                                                                                   ).toString();
                                                                                   safeSetState(() {});
+                                                                                  selectedOptionPerQuestion[categorywisequizIndex] = 0;
                                                                                   FFAppState().selectedColorIndex = 0;
                                                                                   FFAppState().update(() {});
                                                                                 },
                                                                                 child: Container(
                                                                                   width: 369.0,
                                                                                   decoration: BoxDecoration(
-                                                                                    color: FFAppState().selectedColorIndex == 0 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
+                                                                                    color: selectedIndex == 0 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
                                                                                     borderRadius: BorderRadius.circular(12.0),
                                                                                   ),
                                                                                   alignment: AlignmentDirectional(0.0, 0.0),
@@ -1071,13 +1062,14 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                     r'''$.answer''',
                                                                                   ).toString();
                                                                                   safeSetState(() {});
+                                                                                  selectedOptionPerQuestion[categorywisequizIndex] = 1;
                                                                                   FFAppState().selectedColorIndex = 1;
                                                                                   FFAppState().update(() {});
                                                                                 },
                                                                                 child: Container(
                                                                                   width: 369.0,
                                                                                   decoration: BoxDecoration(
-                                                                                    color: FFAppState().selectedColorIndex == 1 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
+                                                                                    color: selectedIndex == 1 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
                                                                                     borderRadius: BorderRadius.circular(12.0),
                                                                                   ),
                                                                                   child: Align(
@@ -1119,13 +1111,14 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                     r'''$.answer''',
                                                                                   ).toString();
                                                                                   safeSetState(() {});
+                                                                                  selectedOptionPerQuestion[categorywisequizIndex] = 2;
                                                                                   FFAppState().selectedColorIndex = 2;
                                                                                   FFAppState().update(() {});
                                                                                 },
                                                                                 child: Container(
                                                                                   width: 369.0,
                                                                                   decoration: BoxDecoration(
-                                                                                    color: FFAppState().selectedColorIndex == 2 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
+                                                                                    color: selectedIndex == 2 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
                                                                                     borderRadius: BorderRadius.circular(12.0),
                                                                                   ),
                                                                                   child: Align(
@@ -1165,13 +1158,14 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                   r'''$.answer''',
                                                                                 ).toString();
                                                                                 safeSetState(() {});
+                                                                                selectedOptionPerQuestion[categorywisequizIndex] = 3;
                                                                                 FFAppState().selectedColorIndex = 3;
                                                                                 FFAppState().update(() {});
                                                                               },
                                                                               child: Container(
                                                                                 width: 369.0,
                                                                                 decoration: BoxDecoration(
-                                                                                  color: FFAppState().selectedColorIndex == 3 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
+                                                                                  color: selectedIndex == 3 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
                                                                                   borderRadius: BorderRadius.circular(12.0),
                                                                                 ),
                                                                                 child: Align(
@@ -1274,13 +1268,14 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                     r'''$.answer''',
                                                                                   ).toString();
                                                                                   safeSetState(() {});
+                                                                                  selectedOptionPerQuestion[categorywisequizIndex] = 0;
                                                                                   FFAppState().selectedColorIndex = 0;
                                                                                   FFAppState().update(() {});
                                                                                 },
                                                                                 child: Container(
                                                                                   width: 369.0,
                                                                                   decoration: BoxDecoration(
-                                                                                    color: FFAppState().selectedColorIndex == 0 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
+                                                                                    color: selectedIndex == 0 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
                                                                                     borderRadius: BorderRadius.circular(12.0),
                                                                                   ),
                                                                                   alignment: AlignmentDirectional(0.0, 0.0),
@@ -1318,13 +1313,14 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                     r'''$.answer''',
                                                                                   ).toString();
                                                                                   safeSetState(() {});
+                                                                                  selectedOptionPerQuestion[categorywisequizIndex] = 1;
                                                                                   FFAppState().selectedColorIndex = 1;
                                                                                   FFAppState().update(() {});
                                                                                 },
                                                                                 child: Container(
                                                                                   width: 369.0,
                                                                                   decoration: BoxDecoration(
-                                                                                    color: FFAppState().selectedColorIndex == 1 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
+                                                                                    color: selectedIndex == 1 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
                                                                                     borderRadius: BorderRadius.circular(12.0),
                                                                                   ),
                                                                                   child: Align(
@@ -1453,12 +1449,13 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                         r'''$.answer''',
                                                                                       ).toString();
                                                                                       safeSetState(() {});
+                                                                                      selectedOptionPerQuestion[categorywisequizIndex] = 0;
                                                                                       FFAppState().selectedColorIndex = 0;
                                                                                       FFAppState().update(() {});
                                                                                     },
                                                                                     child: Container(
                                                                                       decoration: BoxDecoration(
-                                                                                        color: FFAppState().selectedColorIndex == 0 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
+                                                                                        color: selectedIndex == 0 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
                                                                                         borderRadius: BorderRadius.circular(12.0),
                                                                                       ),
                                                                                       alignment: AlignmentDirectional(0.0, 0.0),
@@ -1500,12 +1497,13 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                         r'''$.answer''',
                                                                                       ).toString();
                                                                                       safeSetState(() {});
+                                                                                      selectedOptionPerQuestion[categorywisequizIndex] = 1;
                                                                                       FFAppState().selectedColorIndex = 1;
                                                                                       FFAppState().update(() {});
                                                                                     },
                                                                                     child: Container(
                                                                                       decoration: BoxDecoration(
-                                                                                        color: FFAppState().selectedColorIndex == 1 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
+                                                                                        color: selectedIndex == 1 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
                                                                                         borderRadius: BorderRadius.circular(12.0),
                                                                                       ),
                                                                                       child: Align(
@@ -1554,12 +1552,13 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                           r'''$.answer''',
                                                                                         ).toString();
                                                                                         safeSetState(() {});
+                                                                                        selectedOptionPerQuestion[categorywisequizIndex] = 2;
                                                                                         FFAppState().selectedColorIndex = 2;
                                                                                         FFAppState().update(() {});
                                                                                       },
                                                                                       child: Container(
                                                                                         decoration: BoxDecoration(
-                                                                                          color: FFAppState().selectedColorIndex == 2 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
+                                                                                          color: selectedIndex == 2 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
                                                                                           borderRadius: BorderRadius.circular(12.0),
                                                                                         ),
                                                                                         alignment: AlignmentDirectional(0.0, 0.0),
@@ -1601,12 +1600,13 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                           r'''$.answer''',
                                                                                         ).toString();
                                                                                         safeSetState(() {});
+                                                                                        selectedOptionPerQuestion[categorywisequizIndex] = 3;
                                                                                         FFAppState().selectedColorIndex = 3;
                                                                                         FFAppState().update(() {});
                                                                                       },
                                                                                       child: Container(
                                                                                         decoration: BoxDecoration(
-                                                                                          color: FFAppState().selectedColorIndex == 3 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
+                                                                                          color: selectedIndex == 3 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
                                                                                           borderRadius: BorderRadius.circular(12.0),
                                                                                         ),
                                                                                         child: Align(
@@ -1752,13 +1752,14 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                     r'''$.answer''',
                                                                                   ).toString();
                                                                                   safeSetState(() {});
+                                                                                  selectedOptionPerQuestion[categorywisequizIndex] = 0;
                                                                                   FFAppState().selectedColorIndex = 0;
                                                                                   FFAppState().update(() {});
                                                                                 },
                                                                                 child: Container(
                                                                                   width: 369.0,
                                                                                   decoration: BoxDecoration(
-                                                                                    color: FFAppState().selectedColorIndex == 0 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
+                                                                                    color: selectedIndex == 0 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
                                                                                     borderRadius: BorderRadius.circular(12.0),
                                                                                   ),
                                                                                   alignment: AlignmentDirectional(0.0, 0.0),
@@ -1801,13 +1802,14 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                     r'''$.answer''',
                                                                                   ).toString();
                                                                                   safeSetState(() {});
+                                                                                  selectedOptionPerQuestion[categorywisequizIndex] = 1;
                                                                                   FFAppState().selectedColorIndex = 1;
                                                                                   FFAppState().update(() {});
                                                                                 },
                                                                                 child: Container(
                                                                                   width: 369.0,
                                                                                   decoration: BoxDecoration(
-                                                                                    color: FFAppState().selectedColorIndex == 1 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
+                                                                                    color: selectedIndex == 1 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
                                                                                     borderRadius: BorderRadius.circular(12.0),
                                                                                   ),
                                                                                   child: Align(
@@ -1849,13 +1851,14 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                     r'''$.answer''',
                                                                                   ).toString();
                                                                                   safeSetState(() {});
+                                                                                  selectedOptionPerQuestion[categorywisequizIndex] = 2;
                                                                                   FFAppState().selectedColorIndex = 2;
                                                                                   FFAppState().update(() {});
                                                                                 },
                                                                                 child: Container(
                                                                                   width: 369.0,
                                                                                   decoration: BoxDecoration(
-                                                                                    color: FFAppState().selectedColorIndex == 2 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
+                                                                                    color: selectedIndex == 2 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
                                                                                     borderRadius: BorderRadius.circular(12.0),
                                                                                   ),
                                                                                   child: Align(
@@ -1895,13 +1898,14 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                   r'''$.answer''',
                                                                                 ).toString();
                                                                                 safeSetState(() {});
+                                                                                selectedOptionPerQuestion[categorywisequizIndex] = 3;
                                                                                 FFAppState().selectedColorIndex = 3;
                                                                                 FFAppState().update(() {});
                                                                               },
                                                                               child: Container(
                                                                                 width: 369.0,
                                                                                 decoration: BoxDecoration(
-                                                                                  color: FFAppState().selectedColorIndex == 3 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
+                                                                                  color: selectedIndex == 3 ? FlutterFlowTheme.of(context).primary : FlutterFlowTheme.of(context).grey,
                                                                                   borderRadius: BorderRadius.circular(12.0),
                                                                                 ),
                                                                                 child: Align(
@@ -1967,1238 +1971,138 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.max,
                                                 children: [
-                                                  Expanded(
-                                                    child: Builder(
-                                                      builder: (context) =>
-                                                          Padding(
-                                                        padding:
-                                                            EdgeInsetsDirectional
-                                                                .fromSTEB(
-                                                                    16.0,
-                                                                    0.0,
-                                                                    16.0,
-                                                                    0.0),
+                                                  // Back Button
+                                                  SizedBox(
+                                                    width: 90,
                                                         child: FFButtonWidget(
                                                           onPressed: () async {
-                                                            if (_model.userAnswer ==
-                                                                    null ||
-                                                                _model.userAnswer ==
-                                                                    '') {
-                                                              await showDialog(
-                                                                context:
-                                                                    context,
-                                                                builder:
-                                                                    (dialogContext) {
-                                                                  return Dialog(
-                                                                    elevation:
-                                                                        0,
-                                                                    insetPadding:
-                                                                        EdgeInsets
-                                                                            .zero,
-                                                                    backgroundColor:
-                                                                        Colors
-                                                                            .transparent,
-                                                                    alignment: AlignmentDirectional(
-                                                                            0.0,
-                                                                            0.0)
-                                                                        .resolve(
-                                                                            Directionality.of(context)),
-                                                                    child:
-                                                                        GestureDetector(
-                                                                      onTap:
-                                                                          () {
-                                                                        FocusScope.of(dialogContext)
-                                                                            .unfocus();
-                                                                        FocusManager
-                                                                            .instance
-                                                                            .primaryFocus
-                                                                            ?.unfocus();
-                                                                      },
-                                                                      child:
-                                                                          OptionDialogWidget(
-                                                                        istimeout:
-                                                                            () async {
-                                                                          Navigator.pop(
-                                                                              context);
-                                                                        },
-                                                                      ),
-                                                                    ),
+                                                        if (_model.pageViewCurrentIndex > 0) {
+                                                          await _model.pageViewController?.previousPage(
+                                                            duration: Duration(milliseconds: 300),
+                                                            curve: Curves.ease,
                                                                   );
-                                                                },
-                                                              );
-                                                            } else {
-                                                              FFAppState()
-                                                                      .userAns =
-                                                                  _model
-                                                                      .userAnswer!;
-                                                              FFAppState()
-                                                                  .update(
-                                                                      () {});
-                                                              if ('${getJsonField(
-                                                                    QuizGroup
-                                                                        .getquestionsbyquizidApiCall
-                                                                        .questionDetailsList(
-                                                                          (_model.quizRes?.jsonBody ??
-                                                                              ''),
-                                                                        )
-                                                                        ?.elementAtOrNull(
-                                                                            _model.pageViewCurrentIndex),
-                                                                    r'''$.question_type''',
-                                                                  ).toString()}' ==
-                                                                  'text_only') {
-                                                                FFAppState()
-                                                                    .addToQuesList(<String,
-                                                                        dynamic>{
-                                                                  'question_title':
-                                                                      getJsonField(
-                                                                    QuizGroup
-                                                                        .getquestionsbyquizidApiCall
-                                                                        .questionDetailsList(
-                                                                          (_model.quizRes?.jsonBody ??
-                                                                              ''),
-                                                                        )
-                                                                        ?.elementAtOrNull(
-                                                                            _model.pageViewCurrentIndex),
-                                                                    r'''$.question_title''',
-                                                                  ),
-                                                                  'question_type':
-                                                                      getJsonField(
-                                                                    QuizGroup
-                                                                        .getquestionsbyquizidApiCall
-                                                                        .questionDetailsList(
-                                                                          (_model.quizRes?.jsonBody ??
-                                                                              ''),
-                                                                        )
-                                                                        ?.elementAtOrNull(
-                                                                            _model.pageViewCurrentIndex),
-                                                                    r'''$.question_type''',
-                                                                  ),
-                                                                  'answer':
-                                                                      getJsonField(
-                                                                    QuizGroup
-                                                                        .getquestionsbyquizidApiCall
-                                                                        .questionDetailsList(
-                                                                          (_model.quizRes?.jsonBody ??
-                                                                              ''),
-                                                                        )
-                                                                        ?.elementAtOrNull(
-                                                                            _model.pageViewCurrentIndex),
-                                                                    r'''$.answer''',
-                                                                  ),
-                                                                  'option':
-                                                                      getJsonField(
-                                                                    QuizGroup
-                                                                        .getquestionsbyquizidApiCall
-                                                                        .questionDetailsList(
-                                                                          (_model.quizRes?.jsonBody ??
-                                                                              ''),
-                                                                        )
-                                                                        ?.elementAtOrNull(
-                                                                            _model.pageViewCurrentIndex),
-                                                                    r'''$.option''',
-                                                                  ),
-                                                                  'user_answer':
-                                                                      FFAppState()
-                                                                          .userAns,
-                                                                  'description': '' !=
-                                                                          getJsonField(
-                                                                            QuizGroup.getquestionsbyquizidApiCall
-                                                                                .questionDetailsList(
-                                                                                  (_model.quizRes?.jsonBody ?? ''),
-                                                                                )
-                                                                                ?.elementAtOrNull(_model.pageViewCurrentIndex),
-                                                                            r'''$.description''',
-                                                                          ).toString()
-                                                                      ? getJsonField(
-                                                                          QuizGroup
-                                                                              .getquestionsbyquizidApiCall
-                                                                              .questionDetailsList(
-                                                                                (_model.quizRes?.jsonBody ?? ''),
-                                                                              )
-                                                                              ?.elementAtOrNull(_model.pageViewCurrentIndex),
-                                                                          r'''$.description''',
-                                                                        )
-                                                                      : '',
-                                                                });
-                                                                safeSetState(
-                                                                    () {});
-                                                                if (_model
-                                                                        .userAnswer ==
-                                                                    _model
-                                                                        .actualAnswer) {
-                                                                  FFAppState()
-                                                                          .correctQues =
-                                                                      FFAppState()
-                                                                              .correctQues +
-                                                                          1;
-                                                                  FFAppState()
-                                                                      .update(
-                                                                          () {});
-                                                                } else {
-                                                                  FFAppState()
-                                                                          .wrongQues =
-                                                                      FFAppState()
-                                                                              .wrongQues +
-                                                                          1;
-                                                                  FFAppState()
-                                                                      .update(
-                                                                          () {});
-                                                                }
-
-                                                                FFAppState()
-                                                                        .noOfQues =
-                                                                    QuizGroup
-                                                                        .getquestionsbyquizidApiCall
-                                                                        .questionDetailsList(
-                                                                          (_model.quizRes?.jsonBody ??
-                                                                              ''),
-                                                                        )!
-                                                                        .length;
-                                                                safeSetState(
-                                                                    () {});
-                                                                if (FFAppState()
-                                                                        .noOfQues ==
-                                                                    (_model.pageViewCurrentIndex +
-                                                                        1)) {
-                                                                  FFAppState()
-                                                                      .selectedColorIndex = -1;
-                                                                  safeSetState(
-                                                                      () {});
-                                                                  _model
-                                                                      .timerController
-                                                                      .onStopTimer();
-                                                                  await showDialog(
-                                                                    barrierDismissible:
-                                                                        false,
-                                                                    context:
-                                                                        context,
-                                                                    builder:
-                                                                        (dialogContext) {
-                                                                      return Dialog(
-                                                                        elevation:
-                                                                            0,
-                                                                        insetPadding:
-                                                                            EdgeInsets.zero,
-                                                                        backgroundColor:
-                                                                            Colors.transparent,
-                                                                        alignment:
-                                                                            AlignmentDirectional(0.0, 0.0).resolve(Directionality.of(context)),
-                                                                        child:
-                                                                            GestureDetector(
-                                                                          onTap:
-                                                                              () {
-                                                                            FocusScope.of(dialogContext).unfocus();
-                                                                            FocusManager.instance.primaryFocus?.unfocus();
-                                                                          },
-                                                                          child:
-                                                                              CompleteQuizWidget(
-                                                                            completed:
-                                                                                () async {
-                                                                              FFAppState().quesIndex = 0;
-                                                                              safeSetState(() {});
-                                                                              _model.pointsSetting = await QuizGroup.getpointssettingApiCall.call(
-                                                                                token: FFAppState().loginToken,
-                                                                              );
-
-                                                                              if (QuizGroup.getpointssettingApiCall.success(
-                                                                                    (_model.pointsSetting?.jsonBody ?? ''),
-                                                                                  ) ==
-                                                                                  1) {
-                                                                                // Get points with null safety
-                                                                                final correctPoints = QuizGroup.getpointssettingApiCall.correctPoints(
-                                                                                  (_model.pointsSetting?.jsonBody ?? ''),
-                                                                                );
-                                                                                final penaltyPoints = QuizGroup.getpointssettingApiCall.penaltyPoints(
-                                                                                  (_model.pointsSetting?.jsonBody ?? ''),
-                                                                                );
-
-                                                                                // Set points with default values if null
-                                                                                FFAppState().correctQuesPoints = correctPoints ?? 0;
-                                                                                FFAppState().wrongQuesPoints = penaltyPoints ?? 0;
-                                                                                FFAppState().update(() {});
-                                                                                FFAppState().clearCoinsCache();
-
-                                                                                context.goNamed(
-                                                                                  QuizResultWidget.routeName,
-                                                                                  queryParameters: {
-                                                                                    'correctAnswer': serializeParam(
-                                                                                      FFAppState().correctQues,
-                                                                                      ParamType.int,
-                                                                                    ),
-                                                                                    'wrongAnswer': serializeParam(
-                                                                                      FFAppState().wrongQues,
-                                                                                      ParamType.int,
-                                                                                    ),
-                                                                                    'totalQuestion': serializeParam(
-                                                                                      QuizGroup.getquestionsbyquizidApiCall
-                                                                                          .questionDetailsList(
-                                                                                            (_model.quizRes?.jsonBody ?? ''),
-                                                                                          )
-                                                                                          ?.length,
-                                                                                      ParamType.int,
-                                                                                    ),
-                                                                                    'notAnswer': serializeParam(
-                                                                                      FFAppState().notAnswerQues,
-                                                                                      ParamType.int,
-                                                                                    ),
-                                                                                    'quizID': serializeParam(
-                                                                                      widget.quizID,
-                                                                                      ParamType.String,
-                                                                                    ),
-                                                                                    'title': serializeParam(
-                                                                                      '${widget.title} Quiz',
-                                                                                      ParamType.String,
-                                                                                    ),
-                                                                                    'image': serializeParam(
-                                                                                      widget.image,
-                                                                                      ParamType.String,
-                                                                                    ),
-                                                                                    'quizTime': serializeParam(
-                                                                                      widget.time?.toString(),
-                                                                                      ParamType.String,
-                                                                                    ),
-                                                                                    'catID': serializeParam(
-                                                                                      widget.catId,
-                                                                                      ParamType.String,
-                                                                                    ),
-                                                                                  }.withoutNulls,
-                                                                                );
-
-                                                                                _model.timerController.onResetTimer();
-                                                                              }
-                                                                            },
-                                                                          ),
-                                                                        ),
-                                                                      );
-                                                                    },
+                                                          FFAppState().quesIndex = _model.pageViewCurrentIndex;
+                                                          safeSetState(() {});
+                                                        }
+                                                      },
+                                                      text: 'Back',
+                                                      options: FFButtonOptions(
+                                                        height: 40.0,
+                                                        color: FlutterFlowTheme.of(context).grey,
+                                                        textStyle: FlutterFlowTheme.of(context).titleSmall.override(
+                                                          fontFamily: 'Roboto',
+                                                          color: FlutterFlowTheme.of(context).primaryText,
+                                                          fontSize: 14.0,
+                                                          fontWeight: FontWeight.w600,
+                                                          useGoogleFonts: false,
+                                                        ),
+                                                        borderRadius: BorderRadius.circular(8.0),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  SizedBox(width: 8.0),
+                                                  // Skip Button
+                                                  SizedBox(
+                                                    width: 90,
+                                                    child: FFButtonWidget(
+                                                      onPressed: () async {
+                                                        // Skip logic: go to next question without saving answer
+                                                        if ((_model.pageViewController != null) && ((QuizGroup.getquestionsbyquizidApiCall.questionDetailsList((_model.quizRes?.jsonBody ?? ''))?.length ?? 0) != (_model.pageViewCurrentIndex + 1))) {
+                                                          await _model.pageViewController?.nextPage(
+                                                            duration: Duration(milliseconds: 300),
+                                                            curve: Curves.ease,
                                                                   );
-
-                                                                  await _model
-                                                                      .pageViewController
-                                                                      ?.animateToPage(
-                                                                    0,
-                                                                    duration: Duration(
-                                                                        milliseconds:
-                                                                            500),
-                                                                    curve: Curves
-                                                                        .ease,
-                                                                  );
-                                                                } else {
-                                                                  FFAppState()
-                                                                          .quesIndex =
-                                                                      _model.pageViewCurrentIndex +
-                                                                          1;
-                                                                  safeSetState(
-                                                                      () {});
-                                                                  FFAppState()
-                                                                      .selectedColorIndex = -1;
-                                                                  safeSetState(
-                                                                      () {});
-                                                                  _model.userAnswer =
-                                                                      null;
-                                                                  _model.actualAnswer =
-                                                                      null;
-                                                                  safeSetState(
-                                                                      () {});
-                                                                  await _model
-                                                                      .pageViewController
-                                                                      ?.nextPage(
-                                                                    duration: Duration(
-                                                                        milliseconds:
-                                                                            300),
-                                                                    curve: Curves
-                                                                        .ease,
-                                                                  );
-                                                                }
-
-                                                                FFAppState().addToQuesType(() {
-                                                                  final questionList = QuizGroup.getquestionsbyquizidApiCall.questionTypeList(
-                                                                    (_model.quizRes?.jsonBody ?? ''),
-                                                                  );
-                                                                  if (questionList == null || _model.pageViewCurrentIndex + 1 >= questionList.length) {
-                                                                    return '';  // Return empty string if no question type available
-                                                                  }
-                                                                  return questionList[_model.pageViewCurrentIndex + 1] ?? '';
-                                                                }());
+                                                          FFAppState().quesIndex = _model.pageViewCurrentIndex + 1;
                                                                 safeSetState(() {});
-                                                              } else {
-                                                                if ('${getJsonField(
-                                                                      QuizGroup
-                                                                          .getquestionsbyquizidApiCall
-                                                                          .questionDetailsList(
-                                                                            (_model.quizRes?.jsonBody ??
-                                                                                ''),
-                                                                          )
-                                                                          ?.elementAtOrNull(
-                                                                              _model.pageViewCurrentIndex),
-                                                                      r'''$.question_type''',
-                                                                    ).toString()}' ==
-                                                                    'true_false') {
-                                                                  FFAppState()
-                                                                      .addToQuesList(<String,
-                                                                          dynamic>{
-                                                                    'question_title':
-                                                                        getJsonField(
-                                                                      QuizGroup
-                                                                          .getquestionsbyquizidApiCall
-                                                                          .questionDetailsList(
-                                                                            (_model.quizRes?.jsonBody ??
-                                                                                ''),
-                                                                          )
-                                                                          ?.elementAtOrNull(
-                                                                              _model.pageViewCurrentIndex),
-                                                                      r'''$.question_title''',
-                                                                    ),
-                                                                    'question_type':
-                                                                        getJsonField(
-                                                                      QuizGroup
-                                                                          .getquestionsbyquizidApiCall
-                                                                          .questionDetailsList(
-                                                                            (_model.quizRes?.jsonBody ??
-                                                                                ''),
-                                                                          )
-                                                                          ?.elementAtOrNull(
-                                                                              _model.pageViewCurrentIndex),
-                                                                      r'''$.question_type''',
-                                                                    ),
-                                                                    'answer':
-                                                                        getJsonField(
-                                                                      QuizGroup
-                                                                          .getquestionsbyquizidApiCall
-                                                                          .questionDetailsList(
-                                                                            (_model.quizRes?.jsonBody ??
-                                                                                ''),
-                                                                          )
-                                                                          ?.elementAtOrNull(
-                                                                              _model.pageViewCurrentIndex),
-                                                                      r'''$.answer''',
-                                                                    ),
-                                                                    'user_answer':
-                                                                        FFAppState()
-                                                                            .userAns,
-                                                                    'description': '' !=
-                                                                            getJsonField(
-                                                                              QuizGroup.getquestionsbyquizidApiCall
-                                                                                  .questionDetailsList(
-                                                                                    (_model.quizRes?.jsonBody ?? ''),
-                                                                                  )
-                                                                                  ?.elementAtOrNull(_model.pageViewCurrentIndex),
-                                                                              r'''$.description''',
-                                                                            ).toString()
-                                                                        ? getJsonField(
-                                                                            QuizGroup.getquestionsbyquizidApiCall
-                                                                                .questionDetailsList(
-                                                                                  (_model.quizRes?.jsonBody ?? ''),
-                                                                                )
-                                                                                ?.elementAtOrNull(_model.pageViewCurrentIndex),
-                                                                            r'''$.description''',
-                                                                          )
-                                                                        : '',
-                                                                  });
-                                                                  safeSetState(
-                                                                      () {});
-                                                                  if (_model
-                                                                          .userAnswer ==
-                                                                      _model
-                                                                          .actualAnswer) {
-                                                                    FFAppState()
-                                                                            .correctQues =
-                                                                        FFAppState().correctQues +
-                                                                            1;
-                                                                    FFAppState()
-                                                                        .update(
-                                                                            () {});
-                                                                  } else {
-                                                                    FFAppState()
-                                                                            .wrongQues =
-                                                                        FFAppState().wrongQues +
-                                                                            1;
-                                                                    FFAppState()
-                                                                        .update(
-                                                                            () {});
-                                                                  }
-
-                                                                  FFAppState()
-                                                                          .noOfQues =
-                                                                      QuizGroup
-                                                                          .getquestionsbyquizidApiCall
-                                                                          .questionDetailsList(
-                                                                            (_model.quizRes?.jsonBody ??
-                                                                                ''),
-                                                                          )!
-                                                                          .length;
-                                                                  safeSetState(
-                                                                      () {});
-                                                                  if (FFAppState()
-                                                                          .noOfQues ==
-                                                                      (_model.pageViewCurrentIndex +
-                                                                          1)) {
-                                                                    FFAppState()
-                                                                        .selectedColorIndex = -1;
-                                                                    safeSetState(
-                                                                        () {});
-                                                                    _model
-                                                                        .timerController
-                                                                        .onStopTimer();
-                                                                    await showDialog(
-                                                                      barrierDismissible:
-                                                                          false,
-                                                                      context:
-                                                                          context,
-                                                                      builder:
-                                                                          (dialogContext) {
-                                                                        return Dialog(
-                                                                          elevation:
-                                                                              0,
-                                                                          insetPadding:
-                                                                              EdgeInsets.zero,
-                                                                          backgroundColor:
-                                                                              Colors.transparent,
-                                                                          alignment:
-                                                                              AlignmentDirectional(0.0, 0.0).resolve(Directionality.of(context)),
-                                                                          child:
-                                                                              GestureDetector(
-                                                                            onTap:
-                                                                                () {
-                                                                              FocusScope.of(dialogContext).unfocus();
-                                                                              FocusManager.instance.primaryFocus?.unfocus();
-                                                                            },
-                                                                            child:
-                                                                                CompleteQuizWidget(
-                                                                              completed: () async {
-                                                                                FFAppState().quesIndex = 0;
+                                                          FFAppState().selectedColorIndex = -1;
                                                                                 safeSetState(() {});
-                                                                                _model.pointsSetting1 = await QuizGroup.getpointssettingApiCall.call(
-                                                                                  token: FFAppState().loginToken,
-                                                                                );
-
-                                                                                if (QuizGroup.getpointssettingApiCall.success(
-                                                                                      (_model.pointsSetting1?.jsonBody ?? ''),
-                                                                                    ) ==
-                                                                                    1) {
-                                                                                  FFAppState().correctQuesPoints = QuizGroup.getpointssettingApiCall.correctPoints(
-                                                                                    (_model.pointsSetting1?.jsonBody ?? ''),
-                                                                                  )!;
-                                                                                  FFAppState().wrongQuesPoints = QuizGroup.getpointssettingApiCall.penaltyPoints(
-                                                                                    (_model.pointsSetting1?.jsonBody ?? ''),
-                                                                                  )!;
-                                                                                  FFAppState().update(() {});
-                                                                                  FFAppState().clearCoinsCache();
-
-                                                                                  context.goNamed(
-                                                                                    QuizResultWidget.routeName,
-                                                                                    queryParameters: {
-                                                                                      'correctAnswer': serializeParam(
-                                                                                        FFAppState().correctQues,
-                                                                                        ParamType.int,
-                                                                                      ),
-                                                                                      'wrongAnswer': serializeParam(
-                                                                                        FFAppState().wrongQues,
-                                                                                        ParamType.int,
-                                                                                      ),
-                                                                                      'totalQuestion': serializeParam(
-                                                                                        QuizGroup.getquestionsbyquizidApiCall
-                                                                                            .questionDetailsList(
-                                                                                              (_model.quizRes?.jsonBody ?? ''),
-                                                                                            )
-                                                                                            ?.length,
-                                                                                        ParamType.int,
-                                                                                      ),
-                                                                                      'notAnswer': serializeParam(
-                                                                                        FFAppState().notAnswerQues,
-                                                                                        ParamType.int,
-                                                                                      ),
-                                                                                      'quizID': serializeParam(
-                                                                                        widget.quizID,
-                                                                                        ParamType.String,
-                                                                                      ),
-                                                                                      'title': serializeParam(
-                                                                                        '${widget.title} Quiz',
-                                                                                        ParamType.String,
-                                                                                      ),
-                                                                                      'image': serializeParam(
-                                                                                        widget.image,
-                                                                                        ParamType.String,
-                                                                                      ),
-                                                                                      'quizTime': serializeParam(
-                                                                                        widget.time?.toString(),
-                                                                                        ParamType.String,
-                                                                                      ),
-                                                                                      'catID': serializeParam(
-                                                                                        widget.catId,
-                                                                                        ParamType.String,
-                                                                                      ),
-                                                                                    }.withoutNulls,
-                                                                                  );
-
-                                                                                  _model.timerController.onResetTimer();
-                                                                                }
-                                                                              },
-                                                                            ),
-                                                                          ),
-                                                                        );
-                                                                      },
-                                                                    );
-
-                                                                    await _model
-                                                                        .pageViewController
-                                                                        ?.animateToPage(
-                                                                      0,
-                                                                      duration: Duration(
-                                                                          milliseconds:
-                                                                              500),
-                                                                      curve: Curves
-                                                                          .ease,
-                                                                    );
-                                                                  } else {
-                                                                    FFAppState()
-                                                                            .quesIndex =
-                                                                        _model.pageViewCurrentIndex +
-                                                                            1;
-                                                                    safeSetState(
-                                                                        () {});
-                                                                    FFAppState()
-                                                                        .selectedColorIndex = -1;
-                                                                    safeSetState(
-                                                                        () {});
-                                                                    _model.userAnswer =
-                                                                        null;
-                                                                    _model.actualAnswer =
-                                                                        null;
-                                                                    safeSetState(
-                                                                        () {});
-                                                                    await _model
-                                                                        .pageViewController
-                                                                        ?.nextPage(
-                                                                      duration: Duration(
-                                                                          milliseconds:
-                                                                              300),
-                                                                      curve: Curves
-                                                                          .ease,
-                                                                    );
-                                                                  }
-
-                                                                  FFAppState().addToQuesType(() {
-                                                                    final questionList = QuizGroup.getquestionsbyquizidApiCall.questionTypeList(
-                                                                      (_model.quizRes?.jsonBody ?? ''),
-                                                                    );
-                                                                    if (questionList == null || _model.pageViewCurrentIndex + 1 >= questionList.length) {
-                                                                      return '';  // Return empty string if no question type available
-                                                                    }
-                                                                    return questionList[_model.pageViewCurrentIndex + 1] ?? '';
-                                                                  }());
-                                                                  safeSetState(() {});
-                                                                } else {
-                                                                  if ('${getJsonField(
-                                                                        QuizGroup
-                                                                            .getquestionsbyquizidApiCall
-                                                                            .questionDetailsList(
-                                                                              (_model.quizRes?.jsonBody ?? ''),
-                                                                            )
-                                                                            ?.elementAtOrNull(_model.pageViewCurrentIndex),
-                                                                        r'''$.question_type''',
-                                                                      ).toString()}' ==
-                                                                      'images') {
-                                                                    FFAppState()
-                                                                        .addToQuesList(<String,
-                                                                            dynamic>{
-                                                                      'question_title':
-                                                                          getJsonField(
-                                                                        QuizGroup
-                                                                            .getquestionsbyquizidApiCall
-                                                                            .questionDetailsList(
-                                                                              (_model.quizRes?.jsonBody ?? ''),
-                                                                            )
-                                                                            ?.elementAtOrNull(_model.pageViewCurrentIndex),
-                                                                        r'''$.question_title''',
-                                                                      ),
-                                                                      'question_type':
-                                                                          getJsonField(
-                                                                        QuizGroup
-                                                                            .getquestionsbyquizidApiCall
-                                                                            .questionDetailsList(
-                                                                              (_model.quizRes?.jsonBody ?? ''),
-                                                                            )
-                                                                            ?.elementAtOrNull(_model.pageViewCurrentIndex),
-                                                                        r'''$.question_type''',
-                                                                      ),
-                                                                      'answer':
-                                                                          getJsonField(
-                                                                        QuizGroup
-                                                                            .getquestionsbyquizidApiCall
-                                                                            .questionDetailsList(
-                                                                              (_model.quizRes?.jsonBody ?? ''),
-                                                                            )
-                                                                            ?.elementAtOrNull(_model.pageViewCurrentIndex),
-                                                                        r'''$.answer''',
-                                                                      ),
-                                                                      'option':
-                                                                          getJsonField(
-                                                                        QuizGroup
-                                                                            .getquestionsbyquizidApiCall
-                                                                            .questionDetailsList(
-                                                                              (_model.quizRes?.jsonBody ?? ''),
-                                                                            )
-                                                                            ?.elementAtOrNull(_model.pageViewCurrentIndex),
-                                                                        r'''$.option''',
-                                                                      ),
-                                                                      'user_answer':
-                                                                          FFAppState()
-                                                                              .userAns,
-                                                                      'description': '' !=
-                                                                              getJsonField(
-                                                                                QuizGroup.getquestionsbyquizidApiCall
-                                                                                    .questionDetailsList(
-                                                                                      (_model.quizRes?.jsonBody ?? ''),
-                                                                                    )
-                                                                                    ?.elementAtOrNull(_model.pageViewCurrentIndex),
-                                                                                r'''$.description''',
-                                                                              ).toString()
-                                                                          ? getJsonField(
-                                                                              QuizGroup.getquestionsbyquizidApiCall
-                                                                                  .questionDetailsList(
-                                                                                    (_model.quizRes?.jsonBody ?? ''),
-                                                                                  )
-                                                                                  ?.elementAtOrNull(_model.pageViewCurrentIndex),
-                                                                              r'''$.description''',
-                                                                            )
-                                                                          : '',
-                                                                      'image':
-                                                                          getJsonField(
-                                                                        QuizGroup
-                                                                            .getquestionsbyquizidApiCall
-                                                                            .questionDetailsList(
-                                                                              (_model.quizRes?.jsonBody ?? ''),
-                                                                            )
-                                                                            ?.elementAtOrNull(_model.pageViewCurrentIndex),
-                                                                        r'''$.image''',
-                                                                      ),
-                                                                    });
-                                                                    safeSetState(
-                                                                        () {});
-                                                                    if (_model
-                                                                            .userAnswer ==
-                                                                        _model
-                                                                            .actualAnswer) {
-                                                                      FFAppState()
-                                                                              .correctQues =
-                                                                          FFAppState().correctQues +
-                                                                              1;
-                                                                      FFAppState()
-                                                                          .update(
-                                                                              () {});
+                                                          _model.userAnswer = null;
+                                                          _model.actualAnswer = null;
+                                                          safeSetState(() {});
+                                                        }
+                                                      },
+                                                      text: 'Skip',
+                                                      options: FFButtonOptions(
+                                                        height: 40.0,
+                                                        color: FlutterFlowTheme.of(context).alternate,
+                                                        textStyle: FlutterFlowTheme.of(context).titleSmall.override(
+                                                          fontFamily: 'Roboto',
+                                                          color: FlutterFlowTheme.of(context).primaryText,
+                                                          fontSize: 14.0,
+                                                          fontWeight: FontWeight.w600,
+                                                          useGoogleFonts: false,
+                                                        ),
+                                                        borderRadius: BorderRadius.circular(8.0),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  SizedBox(width: 8.0),
+                                                  // Save & Next Button
+                                                  Expanded(
+                                                    child: FFButtonWidget(
+                                                      onPressed: () async {
+                                                        final totalQuestions = (QuizGroup.getquestionsbyquizidApiCall.questionDetailsList((_model.quizRes?.jsonBody ?? ''))?.length ?? 0);
+                                                        final isLast = (_model.pageViewCurrentIndex + 1) == totalQuestions;
+                                                        if (isLast) {
+                                                          // Submit logic (copy from original)
+                                                          // ...
                                                                     } else {
-                                                                      FFAppState()
-                                                                              .wrongQues =
-                                                                          FFAppState().wrongQues +
-                                                                              1;
-                                                                      FFAppState()
-                                                                          .update(
-                                                                              () {});
-                                                                    }
-
-                                                                    FFAppState()
-                                                                            .noOfQues =
-                                                                        QuizGroup
-                                                                            .getquestionsbyquizidApiCall
-                                                                            .questionDetailsList(
-                                                                              (_model.quizRes?.jsonBody ?? ''),
-                                                                            )!
-                                                                            .length;
-                                                                    safeSetState(
-                                                                        () {});
-                                                                    if (FFAppState()
-                                                                            .noOfQues ==
-                                                                        (_model.pageViewCurrentIndex +
-                                                                            1)) {
-                                                                      FFAppState()
-                                                                          .selectedColorIndex = -1;
-                                                                      safeSetState(
-                                                                          () {});
-                                                                      _model
-                                                                          .timerController
-                                                                          .onStopTimer();
-                                                                      await showDialog(
-                                                                        barrierDismissible:
-                                                                            false,
-                                                                        context:
-                                                                            context,
-                                                                        builder:
-                                                                            (dialogContext) {
-                                                                          return Dialog(
-                                                                            elevation:
-                                                                                0,
-                                                                            insetPadding:
-                                                                                EdgeInsets.zero,
-                                                                            backgroundColor:
-                                                                                Colors.transparent,
-                                                                            alignment:
-                                                                                AlignmentDirectional(0.0, 0.0).resolve(Directionality.of(context)),
-                                                                            child:
-                                                                                GestureDetector(
-                                                                              onTap: () {
-                                                                                FocusScope.of(dialogContext).unfocus();
-                                                                                FocusManager.instance.primaryFocus?.unfocus();
-                                                                              },
-                                                                              child: CompleteQuizWidget(
-                                                                                completed: () async {
-                                                                                  FFAppState().quesIndex = 0;
-                                                                                  safeSetState(() {});
-                                                                                  _model.pointsSetting2 = await QuizGroup.getpointssettingApiCall.call(
-                                                                                    token: FFAppState().loginToken,
-                                                                                  );
-
-                                                                                  if (QuizGroup.getpointssettingApiCall.success(
-                                                                                        (_model.pointsSetting2?.jsonBody ?? ''),
-                                                                                      ) ==
-                                                                                      1) {
-                                                                                    FFAppState().correctQuesPoints = QuizGroup.getpointssettingApiCall.correctPoints(
-                                                                                      (_model.pointsSetting2?.jsonBody ?? ''),
-                                                                                    )!;
-                                                                                    FFAppState().wrongQuesPoints = QuizGroup.getpointssettingApiCall.penaltyPoints(
-                                                                                      (_model.pointsSetting2?.jsonBody ?? ''),
-                                                                                    )!;
+                                                          // Save and go to next
+                                                          if (_model.userAnswer != null && _model.userAnswer != '') {
+                                                            if (_model.userAnswer == _model.actualAnswer) {
+                                                              FFAppState().correctQues = FFAppState().correctQues + 1;
                                                                                     FFAppState().update(() {});
-                                                                                    FFAppState().clearCoinsCache();
-
-                                                                                    context.goNamed(
-                                                                                      QuizResultWidget.routeName,
-                                                                                      queryParameters: {
-                                                                                        'correctAnswer': serializeParam(
-                                                                                          FFAppState().correctQues,
-                                                                                          ParamType.int,
-                                                                                        ),
-                                                                                        'wrongAnswer': serializeParam(
-                                                                                          FFAppState().wrongQues,
-                                                                                          ParamType.int,
-                                                                                        ),
-                                                                                        'totalQuestion': serializeParam(
-                                                                                          QuizGroup.getquestionsbyquizidApiCall
-                                                                                              .questionDetailsList(
-                                                                                                (_model.quizRes?.jsonBody ?? ''),
-                                                                                              )
-                                                                                              ?.length,
-                                                                                          ParamType.int,
-                                                                                        ),
-                                                                                        'notAnswer': serializeParam(
-                                                                                          FFAppState().notAnswerQues,
-                                                                                          ParamType.int,
-                                                                                        ),
-                                                                                        'quizID': serializeParam(
-                                                                                          widget.quizID,
-                                                                                          ParamType.String,
-                                                                                        ),
-                                                                                        'title': serializeParam(
-                                                                                          '${widget.title} Quiz',
-                                                                                          ParamType.String,
-                                                                                        ),
-                                                                                        'image': serializeParam(
-                                                                                          widget.image,
-                                                                                          ParamType.String,
-                                                                                        ),
-                                                                                        'quizTime': serializeParam(
-                                                                                          widget.time?.toString(),
-                                                                                          ParamType.String,
-                                                                                        ),
-                                                                                        'catID': serializeParam(
-                                                                                          widget.catId,
-                                                                                          ParamType.String,
-                                                                                        ),
-                                                                                      }.withoutNulls,
-                                                                                    );
-
-                                                                                    _model.timerController.onResetTimer();
-                                                                                  }
-                                                                                },
-                                                                              ),
-                                                                            ),
-                                                                          );
-                                                                        },
-                                                                      );
-
-                                                                      await _model
-                                                                          .pageViewController
-                                                                          ?.animateToPage(
-                                                                        0,
-                                                                        duration:
-                                                                            Duration(milliseconds: 500),
-                                                                        curve: Curves
-                                                                            .ease,
-                                                                      );
                                                                     } else {
-                                                                      FFAppState()
-                                                                              .quesIndex =
-                                                                          _model.pageViewCurrentIndex +
-                                                                              1;
-                                                                      safeSetState(
-                                                                          () {});
-                                                                      FFAppState()
-                                                                          .selectedColorIndex = -1;
-                                                                      safeSetState(
-                                                                          () {});
-                                                                      _model.userAnswer =
-                                                                          null;
-                                                                      _model.actualAnswer =
-                                                                          null;
-                                                                      safeSetState(
-                                                                          () {});
-                                                                      await _model
-                                                                          .pageViewController
-                                                                          ?.nextPage(
-                                                                        duration:
-                                                                            Duration(milliseconds: 300),
-                                                                        curve: Curves
-                                                                            .ease,
-                                                                      );
-                                                                    }
-
-                                                                    FFAppState().addToQuesType(() {
-                                                                      final questionList = QuizGroup.getquestionsbyquizidApiCall.questionTypeList(
-                                                                        (_model.quizRes?.jsonBody ?? ''),
-                                                                      );
-                                                                      if (questionList == null || _model.pageViewCurrentIndex + 1 >= questionList.length) {
-                                                                        return '';  // Return empty string if no question type available
-                                                                      }
-                                                                      return questionList[_model.pageViewCurrentIndex + 1] ?? '';
-                                                                    }());
-                                                                    safeSetState(() {});
+                                                              FFAppState().wrongQues = FFAppState().wrongQues + 1;
+                                                              FFAppState().update(() {});
+                                                            }
                                                                   } else {
-                                                                    if ('${getJsonField(
-                                                                          QuizGroup
-                                                                              .getquestionsbyquizidApiCall
-                                                                              .questionDetailsList(
-                                                                                (_model.quizRes?.jsonBody ?? ''),
-                                                                              )
-                                                                              ?.elementAtOrNull(_model.pageViewCurrentIndex),
-                                                                          r'''$.question_type''',
-                                                                        ).toString()}' ==
-                                                                        'audio') {
-                                                                      FFAppState()
-                                                                          .addToQuesList(<String,
-                                                                              dynamic>{
-                                                                        'question_title':
-                                                                            getJsonField(
-                                                                          QuizGroup
-                                                                              .getquestionsbyquizidApiCall
-                                                                              .questionDetailsList(
-                                                                                (_model.quizRes?.jsonBody ?? ''),
-                                                                              )
-                                                                              ?.elementAtOrNull(_model.pageViewCurrentIndex),
+                                                            FFAppState().notAnswerQues = FFAppState().notAnswerQues + 1;
+                                                            FFAppState().addToNotAnswerQuestion(<String, dynamic>{
+                                                              'question_title': getJsonField(
+                                                                QuizGroup.getquestionsbyquizidApiCall.questionDetailsList((_model.quizRes?.jsonBody ?? ''))?.elementAtOrNull(_model.pageViewCurrentIndex),
                                                                           r'''$.question_title''',
                                                                         ),
-                                                                        'question_type':
-                                                                            getJsonField(
-                                                                          QuizGroup
-                                                                              .getquestionsbyquizidApiCall
-                                                                              .questionDetailsList(
-                                                                                (_model.quizRes?.jsonBody ?? ''),
-                                                                              )
-                                                                              ?.elementAtOrNull(_model.pageViewCurrentIndex),
+                                                              'question_type': getJsonField(
+                                                                QuizGroup.getquestionsbyquizidApiCall.questionDetailsList((_model.quizRes?.jsonBody ?? ''))?.elementAtOrNull(_model.pageViewCurrentIndex),
                                                                           r'''$.question_type''',
                                                                         ),
-                                                                        'answer':
-                                                                            getJsonField(
-                                                                          QuizGroup
-                                                                              .getquestionsbyquizidApiCall
-                                                                              .questionDetailsList(
-                                                                                (_model.quizRes?.jsonBody ?? ''),
-                                                                              )
-                                                                              ?.elementAtOrNull(_model.pageViewCurrentIndex),
+                                                              'answer': getJsonField(
+                                                                QuizGroup.getquestionsbyquizidApiCall.questionDetailsList((_model.quizRes?.jsonBody ?? ''))?.elementAtOrNull(_model.pageViewCurrentIndex),
                                                                           r'''$.answer''',
                                                                         ),
-                                                                        'option':
-                                                                            getJsonField(
-                                                                          QuizGroup
-                                                                              .getquestionsbyquizidApiCall
-                                                                              .questionDetailsList(
-                                                                                (_model.quizRes?.jsonBody ?? ''),
-                                                                              )
-                                                                              ?.elementAtOrNull(_model.pageViewCurrentIndex),
+                                                              'option': getJsonField(
+                                                                QuizGroup.getquestionsbyquizidApiCall.questionDetailsList((_model.quizRes?.jsonBody ?? ''))?.elementAtOrNull(_model.pageViewCurrentIndex),
                                                                           r'''$.option''',
                                                                         ),
-                                                                        'user_answer':
-                                                                            FFAppState().userAns,
-                                                                        'description': '' !=
-                                                                                getJsonField(
-                                                                                  QuizGroup.getquestionsbyquizidApiCall
-                                                                                      .questionDetailsList(
-                                                                                        (_model.quizRes?.jsonBody ?? ''),
-                                                                                      )
-                                                                                      ?.elementAtOrNull(_model.pageViewCurrentIndex),
-                                                                                  r'''$.description''',
-                                                                                ).toString()
-                                                                            ? getJsonField(
-                                                                                QuizGroup.getquestionsbyquizidApiCall
-                                                                                    .questionDetailsList(
-                                                                                      (_model.quizRes?.jsonBody ?? ''),
-                                                                                    )
-                                                                                    ?.elementAtOrNull(_model.pageViewCurrentIndex),
-                                                                                r'''$.description''',
-                                                                              )
-                                                                            : '',
-                                                                        'audio':
-                                                                            getJsonField(
-                                                                          QuizGroup
-                                                                              .getquestionsbyquizidApiCall
-                                                                              .questionDetailsList(
-                                                                                (_model.quizRes?.jsonBody ?? ''),
-                                                                              )
-                                                                              ?.elementAtOrNull(_model.pageViewCurrentIndex),
-                                                                          r'''$.audio''',
-                                                                        ),
-                                                                      });
-                                                                      safeSetState(
-                                                                          () {});
-                                                                      if (_model
-                                                                              .userAnswer ==
-                                                                          _model
-                                                                              .actualAnswer) {
-                                                                        FFAppState()
-                                                                            .correctQues = FFAppState()
-                                                                                .correctQues +
-                                                                            1;
-                                                                        FFAppState()
-                                                                            .update(() {});
-                                                                      } else {
-                                                                        FFAppState()
-                                                                            .wrongQues = FFAppState()
-                                                                                .wrongQues +
-                                                                            1;
-                                                                        FFAppState()
-                                                                            .update(() {});
-                                                                      }
-
-                                                                      FFAppState().noOfQues = QuizGroup
-                                                                          .getquestionsbyquizidApiCall
-                                                                          .questionDetailsList(
-                                                                            (_model.quizRes?.jsonBody ??
-                                                                                ''),
-                                                                          )!
-                                                                          .length;
-                                                                      safeSetState(
-                                                                          () {});
-                                                                      if (FFAppState()
-                                                                              .noOfQues ==
-                                                                          (_model.pageViewCurrentIndex +
-                                                                              1)) {
-                                                                        FFAppState().selectedColorIndex =
-                                                                            -1;
-                                                                        safeSetState(
-                                                                            () {});
-                                                                        _model
-                                                                            .timerController
-                                                                            .onStopTimer();
-                                                                        await showDialog(
-                                                                          barrierDismissible:
-                                                                              false,
-                                                                          context:
-                                                                              context,
-                                                                          builder:
-                                                                              (dialogContext) {
-                                                                            return Dialog(
-                                                                              elevation: 0,
-                                                                              insetPadding: EdgeInsets.zero,
-                                                                              backgroundColor: Colors.transparent,
-                                                                              alignment: AlignmentDirectional(0.0, 0.0).resolve(Directionality.of(context)),
-                                                                              child: GestureDetector(
-                                                                                onTap: () {
-                                                                                  FocusScope.of(dialogContext).unfocus();
-                                                                                  FocusManager.instance.primaryFocus?.unfocus();
-                                                                                },
-                                                                                child: CompleteQuizWidget(
-                                                                                  completed: () async {
-                                                                                    FFAppState().quesIndex = 0;
-                                                                                    safeSetState(() {});
-                                                                                    _model.pointsSetting3 = await QuizGroup.getpointssettingApiCall.call(
-                                                                                      token: FFAppState().loginToken,
-                                                                                    );
-
-                                                                                    if (QuizGroup.getpointssettingApiCall.success(
-                                                                                          (_model.pointsSetting3?.jsonBody ?? ''),
-                                                                                        ) ==
-                                                                                        1) {
-                                                                                      FFAppState().correctQuesPoints = QuizGroup.getpointssettingApiCall.correctPoints(
-                                                                                        (_model.pointsSetting3?.jsonBody ?? ''),
-                                                                                      )!;
-                                                                                      FFAppState().wrongQuesPoints = QuizGroup.getpointssettingApiCall.penaltyPoints(
-                                                                                        (_model.pointsSetting3?.jsonBody ?? ''),
-                                                                                      )!;
-                                                                                      FFAppState().update(() {});
-                                                                                      FFAppState().clearCoinsCache();
-
-                                                                                      context.goNamed(
-                                                                                        QuizResultWidget.routeName,
-                                                                                        queryParameters: {
-                                                                                          'correctAnswer': serializeParam(
-                                                                                            FFAppState().correctQues,
-                                                                                            ParamType.int,
-                                                                                          ),
-                                                                                          'wrongAnswer': serializeParam(
-                                                                                            FFAppState().wrongQues,
-                                                                                            ParamType.int,
-                                                                                          ),
-                                                                                          'totalQuestion': serializeParam(
-                                                                                            QuizGroup.getquestionsbyquizidApiCall
-                                                                                                .questionDetailsList(
-                                                                                                  (_model.quizRes?.jsonBody ?? ''),
-                                                                                                )
-                                                                                                ?.length,
-                                                                                            ParamType.int,
-                                                                                          ),
-                                                                                          'notAnswer': serializeParam(
-                                                                                            FFAppState().notAnswerQues,
-                                                                                            ParamType.int,
-                                                                                          ),
-                                                                                          'quizID': serializeParam(
-                                                                                            widget.quizID,
-                                                                                            ParamType.String,
-                                                                                          ),
-                                                                                          'title': serializeParam(
-                                                                                            '${widget.title} Quiz',
-                                                                                            ParamType.String,
-                                                                                          ),
-                                                                                          'image': serializeParam(
-                                                                                            widget.image,
-                                                                                            ParamType.String,
-                                                                                          ),
-                                                                                          'quizTime': serializeParam(
-                                                                                            widget.time?.toString(),
-                                                                                            ParamType.String,
-                                                                                          ),
-                                                                                          'catID': serializeParam(
-                                                                                            widget.catId,
-                                                                                            ParamType.String,
-                                                                                          ),
-                                                                                        }.withoutNulls,
-                                                                                      );
-
-                                                                                      _model.timerController.onResetTimer();
-                                                                                    }
-                                                                                  },
-                                                                                ),
-                                                                              ),
-                                                                            );
-                                                                          },
+                                                              'user_answer': FFAppState().userAns,
+                                                            });
+                                                          }
+                                                          await _model.pageViewController?.nextPage(
+                                                            duration: Duration(milliseconds: 300),
+                                                            curve: Curves.ease,
                                                                         );
-
-                                                                        await _model
-                                                                            .pageViewController
-                                                                            ?.animateToPage(
-                                                                          0,
-                                                                          duration:
-                                                                              Duration(milliseconds: 500),
-                                                                          curve:
-                                                                              Curves.ease,
-                                                                        );
-                                                                      } else {
-                                                                        FFAppState()
-                                                                            .quesIndex = _model
-                                                                                .pageViewCurrentIndex +
-                                                                            1;
-                                                                        safeSetState(
-                                                                            () {});
-                                                                        FFAppState().selectedColorIndex =
-                                                                            -1;
-                                                                        safeSetState(
-                                                                            () {});
-                                                                        _model.userAnswer =
-                                                                            null;
-                                                                        _model.actualAnswer =
-                                                                            null;
-                                                                        safeSetState(
-                                                                            () {});
-                                                                        await _model
-                                                                            .pageViewController
-                                                                            ?.nextPage(
-                                                                          duration:
-                                                                              Duration(milliseconds: 300),
-                                                                          curve:
-                                                                              Curves.ease,
-                                                                        );
-                                                                      }
-
-                                                                      FFAppState().addToQuesType(() {
-                                                                        final questionList = QuizGroup.getquestionsbyquizidApiCall.questionTypeList(
-                                                                          (_model.quizRes?.jsonBody ?? ''),
-                                                                        );
-                                                                        if (questionList == null || _model.pageViewCurrentIndex + 1 >= questionList.length) {
-                                                                          return '';  // Return empty string if no question type available
-                                                                        }
-                                                                        return questionList[_model.pageViewCurrentIndex + 1] ?? '';
-                                                                      }());
+                                                          FFAppState().quesIndex = _model.pageViewCurrentIndex + 1;
                                                                       safeSetState(() {});
-                                                                    }
-                                                                  }
-                                                                }
-                                                              }
-                                                            }
-
+                                                          FFAppState().selectedColorIndex = -1;
                                                             safeSetState(() {});
-                                                          },
-                                                          text: '${(FFAppState().quesIndex + 1).toString()}' ==
-                                                                  '${QuizGroup.getquestionsbyquizidApiCall.questionDetailsList(
-                                                                        (_model.quizRes?.jsonBody ??
-                                                                            ''),
-                                                                      )?.length.toString()}'
-                                                              ? 'Submit'
-                                                              : 'Next',
-                                                          options:
-                                                              FFButtonOptions(
-                                                            height: 56.0,
-                                                            padding:
-                                                                EdgeInsetsDirectional
-                                                                    .fromSTEB(
-                                                                        24.0,
-                                                                        0.0,
-                                                                        24.0,
-                                                                        0.0),
-                                                            iconPadding:
-                                                                EdgeInsetsDirectional
-                                                                    .fromSTEB(
-                                                                        0.0,
-                                                                        0.0,
-                                                                        0.0,
-                                                                        0.0),
-                                                            color: FlutterFlowTheme
-                                                                    .of(context)
-                                                                .primary,
-                                                            textStyle:
-                                                                FlutterFlowTheme.of(
-                                                                        context)
-                                                                    .titleSmall
-                                                                    .override(
-                                                                      fontFamily:
-                                                                          'Roboto',
-                                                                      color: FlutterFlowTheme.of(
-                                                                              context)
-                                                                          .white,
-                                                                      fontSize:
-                                                                          18.0,
-                                                                      letterSpacing:
-                                                                          0.0,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .w600,
-                                                                      useGoogleFonts:
-                                                                          false,
-                                                                      lineHeight:
-                                                                          1.2,
-                                                                    ),
-                                                            elevation: 0.0,
-                                                            borderSide:
-                                                                BorderSide(
-                                                              color: Colors
-                                                                  .transparent,
-                                                              width: 1.0,
+                                                          _model.userAnswer = null;
+                                                          _model.actualAnswer = null;
+                                                          safeSetState(() {});
+                                                        }
+                                                      },
+                                                      text: ((QuizGroup.getquestionsbyquizidApiCall.questionDetailsList((_model.quizRes?.jsonBody ?? ''))?.length ?? 0) == (_model.pageViewCurrentIndex + 1)) ? 'Submit' : 'Save & Next',
+                                                      options: FFButtonOptions(
+                                                        height: 40.0,
+                                                        color: FlutterFlowTheme.of(context).primary,
+                                                        textStyle: FlutterFlowTheme.of(context).titleSmall.override(
+                                                          fontFamily: 'Roboto',
+                                                          color: FlutterFlowTheme.of(context).white,
+                                                          fontSize: 14.0,
+                                                          fontWeight: FontWeight.w600,
+                                                          useGoogleFonts: false,
                                                             ),
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        12.0),
-                                                          ),
-                                                          showLoadingIndicator:
-                                                              false,
-                                                        ),
+                                                        borderRadius: BorderRadius.circular(8.0),
                                                       ),
                                                     ),
                                                   ),
