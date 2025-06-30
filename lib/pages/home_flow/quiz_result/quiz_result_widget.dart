@@ -25,6 +25,8 @@ class QuizResultWidget extends StatefulWidget {
     this.image,
     this.quizTime,
     this.catID,
+    this.correctAnsReward,
+    this.penaltyPerQuestion,
   });
 
   final int? correctAnswer;
@@ -36,6 +38,8 @@ class QuizResultWidget extends StatefulWidget {
   final String? image;
   final String? quizTime;
   final String? catID;
+  final double? correctAnsReward;
+  final double? penaltyPerQuestion;
 
   static String routeName = 'quiz_result';
   static String routePath = '/quizResult';
@@ -54,6 +58,13 @@ class _QuizResultWidgetState extends State<QuizResultWidget> {
     super.initState();
     _model = createModel(context, () => QuizResultModel());
 
+    // DEBUG PRINTS
+    print('RESULT DEBUG: correctAnswer=' + (widget.correctAnswer?.toString() ?? 'null'));
+    print('RESULT DEBUG: wrongAnswer=' + (widget.wrongAnswer?.toString() ?? 'null'));
+    print('RESULT DEBUG: correctAnsReward=' + (widget.correctAnsReward?.toString() ?? 'null'));
+    print('RESULT DEBUG: penaltyPerQuestion=' + (widget.penaltyPerQuestion?.toString() ?? 'null'));
+    print('RESULT DEBUG: Calculated score=' + (((widget.correctAnswer ?? 0) * (widget.correctAnsReward ?? 0.0)) - ((widget.wrongAnswer ?? 0) * (widget.penaltyPerQuestion ?? 0.0))).toString());
+
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       _model.startquizres = await QuizGroup.startquizApiCall.call(
@@ -66,8 +77,7 @@ class _QuizResultWidgetState extends State<QuizResultWidget> {
         totalQuestions: widget.totalQuestion,
         correctAnswers: widget.correctAnswer,
         wrongAnswers: widget.wrongAnswer,
-        score: ((widget.correctAnswer!) * FFAppState().correctQuesPoints) -
-            ((widget.wrongAnswer!) * FFAppState().wrongQuesPoints),
+        score: ((((widget.correctAnswer ?? 0) * (widget.correctAnsReward ?? 0.0)) - ((widget.wrongAnswer ?? 0) * (widget.penaltyPerQuestion ?? 0.0))).toInt()),
         token: FFAppState().loginToken,
       );
     });
@@ -422,8 +432,8 @@ class _QuizResultWidgetState extends State<QuizResultWidget> {
                                                                             0.0,
                                                                             0.0),
                                                                     child: Text(
-                                                                      (((widget.correctAnswer!) * FFAppState().correctQuesPoints) -
-                                                                              ((widget.wrongAnswer!) * FFAppState().wrongQuesPoints))
+                                                                      (((widget.correctAnswer!) * (widget.correctAnsReward ?? 0.0)) -
+                                                                              ((widget.wrongAnswer!) * (widget.penaltyPerQuestion ?? 0.0)))
                                                                           .toString(),
                                                                       style: FlutterFlowTheme.of(
                                                                               context)
@@ -937,17 +947,15 @@ class _QuizResultWidgetState extends State<QuizResultWidget> {
                                                         0.0, 0.0, 8.0, 0.0),
                                                 child: FFButtonWidget(
                                                   onPressed: () async {
-                                                    FFAppState()
-                                                            .quesReviewList =
-                                                        QuizGroup
-                                                            .startquizApiCall
-                                                            .questionDetailsList(
-                                                              (_model.startquizres
-                                                                      ?.jsonBody ??
-                                                                  ''),
-                                                            )!
-                                                            .toList()
-                                                            .cast<dynamic>();
+                                                    final reviewList = QuizGroup.startquizApiCall.questionDetailsList(
+                                                      (_model.startquizres?.jsonBody ?? ''),
+                                                    );
+                                                    FFAppState().quesReviewList = (reviewList ?? []).toList().cast<dynamic>();
+                                                    // Add debug logging
+                                                    print('DEBUG: quesReviewList = '
+                                                        '${FFAppState().quesReviewList}');
+                                                    print('DEBUG: startquizres.jsonBody = '
+                                                        '${_model.startquizres?.jsonBody}');
                                                     safeSetState(() {});
 
                                                     context.pushNamed(
@@ -1002,13 +1010,10 @@ class _QuizResultWidgetState extends State<QuizResultWidget> {
                                                         8.0, 0.0, 0.0, 0.0),
                                                 child: FFButtonWidget(
                                                   onPressed: () async {
-                                                    if ((((widget.correctAnswer!) *
-                                                                FFAppState()
-                                                                    .correctQuesPoints) -
-                                                            ((widget
-                                                                    .wrongAnswer!) *
-                                                                FFAppState()
-                                                                    .wrongQuesPoints)) ==
+                                                    if ((((widget.correctAnswer!) * (widget.correctAnsReward ?? 0.0)) -
+                                                                ((widget
+                                                                        .wrongAnswer!) *
+                                                                    (widget.penaltyPerQuestion ?? 0.0))) ==
                                                         0) {
                                                       FFAppState().correctQues =
                                                           0;
@@ -1061,12 +1066,10 @@ class _QuizResultWidgetState extends State<QuizResultWidget> {
                                                         ).toString(),
                                                         points: (((widget
                                                                         .correctAnswer!) *
-                                                                    FFAppState()
-                                                                        .correctQuesPoints) -
+                                                                    (widget.correctAnsReward ?? 0.0)) -
                                                                 ((widget
                                                                         .wrongAnswer!) *
-                                                                    FFAppState()
-                                                                        .wrongQuesPoints))
+                                                                    (widget.penaltyPerQuestion ?? 0.0)))
                                                             .toDouble(),
                                                         description:
                                                             '${widget.title} points',

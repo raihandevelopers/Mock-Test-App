@@ -499,7 +499,7 @@ class _QuizquestionsScreenCopyWidgetState
                                           child: custom_widgets.LinearBarTimer(
                                             width: 309.0,
                                             height: 10.0,
-                                            time: 300,
+                                            time: (int.tryParse(widget.time ?? '0') ?? 0) * 60 * 1000,
                                           ),
                                         ),
                                       ),
@@ -516,7 +516,7 @@ class _QuizquestionsScreenCopyWidgetState
                                     alignment: AlignmentDirectional(0.0, 0.0),
                                     child: Builder(
                                       builder: (context) => FlutterFlowTimer(
-                                        initialTime: _model.timerInitialTimeMs,
+                                        initialTime: (int.tryParse(widget.time ?? '0') ?? 0) * 60 * 1000,
                                         getDisplayTime: (value) =>
                                             StopWatchTimer.getDisplayTime(
                                           value,

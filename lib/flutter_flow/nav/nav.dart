@@ -11,6 +11,7 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/index.dart';
 import '/pages/category_flow/category_viewall/current_affairs_widget.dart';
 import '/pages/profile_flow/books_screen/books_screen_widget.dart';
+import '/pages/category_flow/subcategory_detail_page/subcategory_detail_page_widget.dart';
 
 export 'package:go_router/go_router.dart';
 export 'serialization_util.dart';
@@ -158,6 +159,14 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           ),
         ),
         FFRoute(
+          name: SubcategoryDetailPageWidget.routeName,
+          path: SubcategoryDetailPageWidget.routePath,
+          builder: (context, params) => SubcategoryDetailPageWidget(
+            subcategoryId: params.getParam('subcategoryId', ParamType.String),
+            subcategoryName: params.getParam('subcategoryName', ParamType.String),
+          ),
+        ),
+        FFRoute(
           name: QuizQuestionsScreenWidget.routeName,
           path: QuizQuestionsScreenWidget.routePath,
           builder: (context, params) => QuizQuestionsScreenWidget(
@@ -173,9 +182,9 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
               'image',
               ParamType.String,
             ),
-            time: params.getParam(
-              'time',
-              ParamType.int,
+            quizTime: params.getParam(
+              'quizTime',
+              ParamType.String,
             ),
             quizID: params.getParam(
               'quizID',
@@ -184,6 +193,22 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
             timerStatus: params.getParam(
               'timerStatus',
               ParamType.int,
+            ),
+            ques: params.getParam(
+              'ques',
+              ParamType.int,
+            ),
+            description: params.getParam(
+              'description',
+              ParamType.String,
+            ),
+            correctAnsReward: params.getParam(
+              'correctAnsReward',
+              ParamType.double,
+            ),
+            penaltyPerQuestion: params.getParam(
+              'penaltyPerQuestion',
+              ParamType.double,
             ),
           ),
         ),
@@ -226,6 +251,14 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
             catID: params.getParam(
               'catID',
               ParamType.String,
+            ),
+            correctAnsReward: params.getParam(
+              'correctAnsReward',
+              ParamType.double,
+            ),
+            penaltyPerQuestion: params.getParam(
+              'penaltyPerQuestion',
+              ParamType.double,
             ),
           ),
         ),

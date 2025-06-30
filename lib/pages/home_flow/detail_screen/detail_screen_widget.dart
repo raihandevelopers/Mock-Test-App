@@ -644,8 +644,16 @@ class _DetailScreenWidgetState extends State<DetailScreenWidget>
                                   widget.image,
                                   ParamType.String,
                                 ),
-                                'time': serializeParam(
-                                  int.parse((widget.quizTime!)),
+                                'quizTime': serializeParam(
+                                  widget.quizTime,
+                                  ParamType.String,
+                                ),
+                                'description': serializeParam(
+                                  widget.description,
+                                  ParamType.String,
+                                ),
+                                'ques': serializeParam(
+                                  widget.ques,
                                   ParamType.int,
                                 ),
                                 'quizID': serializeParam(

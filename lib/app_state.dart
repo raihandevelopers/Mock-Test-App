@@ -109,10 +109,10 @@ class FFAppState extends ChangeNotifier {
     });
     _safeInit(() {
       _correctQuesPoints =
-          prefs.getInt('ff_correctQuesPoints') ?? _correctQuesPoints;
+          prefs.getDouble('ff_correctQuesPoints') ?? _correctQuesPoints;
     });
     _safeInit(() {
-      _wrongQuesPoints = prefs.getInt('ff_wrongQuesPoints') ?? _wrongQuesPoints;
+      _wrongQuesPoints = prefs.getDouble('ff_wrongQuesPoints') ?? _wrongQuesPoints;
     });
     _safeInit(() {
       _isPremium = prefs.getBool('ff_isPremium') ?? _isPremium;
@@ -1201,18 +1201,18 @@ class FFAppState extends ChangeNotifier {
     prefs.setInt('ff_countAd', value);
   }
 
-  int _correctQuesPoints = 0;
-  int get correctQuesPoints => _correctQuesPoints;
-  set correctQuesPoints(int value) {
+  double _correctQuesPoints = 0.0;
+  double get correctQuesPoints => _correctQuesPoints;
+  set correctQuesPoints(double value) {
     _correctQuesPoints = value;
-    prefs.setInt('ff_correctQuesPoints', value);
+    prefs.setDouble('ff_correctQuesPoints', value);
   }
 
-  int _wrongQuesPoints = 0;
-  int get wrongQuesPoints => _wrongQuesPoints;
-  set wrongQuesPoints(int value) {
+  double _wrongQuesPoints = 0.0;
+  double get wrongQuesPoints => _wrongQuesPoints;
+  set wrongQuesPoints(double value) {
     _wrongQuesPoints = value;
-    prefs.setInt('ff_wrongQuesPoints', value);
+    prefs.setDouble('ff_wrongQuesPoints', value);
   }
 
   bool _isAdLoad = false;

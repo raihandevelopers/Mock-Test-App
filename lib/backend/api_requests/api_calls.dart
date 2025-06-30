@@ -77,6 +77,8 @@ class QuizGroup {
   static GetNotificationsCall getNotificationsCall = GetNotificationsCall();
   static GetAllEbooksCall getAllEbooksCall = GetAllEbooksCall();
   static GetCarouselBannersCall getCarouselBannersCall = GetCarouselBannersCall();
+  static GetSubcategoriesCall getSubcategoriesCall = GetSubcategoriesCall();
+  static GetQuizBySubcategoryCall getQuizBySubcategoryCall = GetQuizBySubcategoryCall();
 }
 
 class CheckregistereduserApiCall {
@@ -2377,4 +2379,61 @@ class GoogleSigninCall {
       return {};
     }
   }
+}
+
+class GetSubcategoriesCall {
+  Future<ApiCallResponse> call({
+    String? categoryId = '',
+    String? token = '',
+  }) async {
+    final baseUrl = QuizGroup.getBaseUrl(token: token);
+    return ApiManager.instance.makeApiCall(
+      callName: 'GetSubcategories',
+      apiUrl: '${baseUrl}subcategories?categoryId=$categoryId',
+      callType: ApiCallType.GET,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      bodyType: BodyType.NONE,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  List? subcategoryList(dynamic response) => response as List?;
+}
+
+class GetQuizBySubcategoryCall {
+  Future<ApiCallResponse> call({
+    String? subcategoryId = '',
+    String? token = '',
+  }) async {
+    final baseUrl = QuizGroup.getBaseUrl(token: token);
+    final body = '{"subcategoryId": "$subcategoryId"}';
+    return ApiManager.instance.makeApiCall(
+      callName: 'GetQuizBySubcategory',
+      apiUrl: '${baseUrl}getquizbysubcategory',
+      callType: ApiCallType.POST,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      params: {},
+      body: body,
+      bodyType: BodyType.JSON,
+      returnBody: true,
+      encodeBodyUtf8: false,
+      decodeUtf8: false,
+      cache: false,
+      isStreamingApi: false,
+      alwaysAllowBody: false,
+    );
+  }
+
+  List? quizList(dynamic response) => response != null && response['quizzes'] is List ? response['quizzes'] as List : [];
 }

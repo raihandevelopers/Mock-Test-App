@@ -6,6 +6,7 @@ import '/backend/backend.dart';
 
 import '../../flutter_flow/place.dart';
 import '../../flutter_flow/uploaded_file.dart';
+import '/pages/category_flow/subcategory_detail_page/subcategory_detail_page_widget.dart';
 
 /// SERIALIZATION HELPERS
 

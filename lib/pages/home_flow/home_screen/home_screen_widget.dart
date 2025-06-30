@@ -42,9 +42,6 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget>
 
   final animationsMap = <String, AnimationInfo>{};
 
-  // Store quizzes for each category for search
-  final Map<String, List<dynamic>> homePageQuizzes = {};
-
   // Banner carousel current index
   int _bannerCurrentIndex = 0;
 
@@ -137,192 +134,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget>
               ),
             ),
             actions: [
-              // Store quizzes for search
-              Builder(
-                builder: (context) {
-                  return IconButton(
-                    icon: Icon(Icons.search),
-                    onPressed: () async {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          TextEditingController searchController = TextEditingController();
-                          List<dynamic> searchResults = [];
-                          bool isLoading = false;
-                          String lastQuery = '';
-                          return StatefulBuilder(
-                            builder: (context, setState) {
-                              Future<void> performSearch(String query) async {
-                                setState(() {
-                                  isLoading = true;
-                                });
-                                // Combine all quizzes from homePageQuizzes
-                                final allHomeQuizzes = homePageQuizzes.values.expand((x) => x).toList();
-                                final results = allHomeQuizzes.where((quiz) {
-                                  final name = getJsonField(quiz, r'''$.name''').toString().toLowerCase();
-                                  return name.contains(query.toLowerCase());
-                                }).toList();
-                                setState(() {
-                                  searchResults = results;
-                                  isLoading = false;
-                                  lastQuery = query;
-                                });
-                              }
-                              return Dialog(
-                                insetPadding: EdgeInsets.all(16),
-                                backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                child: Container(
-                                  width: 400,
-                                  constraints: BoxConstraints(maxHeight: 500),
-                                  padding: EdgeInsets.all(16),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: TextField(
-                                              controller: searchController,
-                                              autofocus: true,
-                                              decoration: InputDecoration(
-                                                hintText: 'Search quiz by name',
-                                                prefixIcon: Icon(Icons.search, size: 20),
-                                                contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 8),
-                                                border: OutlineInputBorder(
-                                                  borderRadius: BorderRadius.circular(24.0),
-                                                  borderSide: BorderSide.none,
-                                                ),
-                                                filled: true,
-                                                fillColor: FlutterFlowTheme.of(context).secondaryBackground,
-                                                isDense: true,
-                                              ),
-                                              style: FlutterFlowTheme.of(context).bodyMedium,
-                                              onChanged: (value) {
-                                                if (value.trim().isNotEmpty) {
-                                                  performSearch(value.trim());
-                                                } else {
-                                                  setState(() {
-                                                    searchResults = [];
-                                                  });
-                                                }
-                                              },
-                                            ),
-                                          ),
-                                          IconButton(
-                                            icon: Icon(Icons.close),
-                                            onPressed: () => Navigator.of(context).pop(),
-                                          ),
-                                        ],
-                                      ),
-                                      SizedBox(height: 16),
-                                      if (isLoading)
-                                        Center(child: CircularProgressIndicator()),
-                                      if (!isLoading && searchResults.isEmpty && searchController.text.isNotEmpty)
-                                        Center(child: Text('No quizzes found', style: FlutterFlowTheme.of(context).bodyMedium)),
-                                      if (!isLoading && searchResults.isNotEmpty)
-                                        Expanded(
-                                          child: ListView.separated(
-                                            shrinkWrap: true,
-                                            itemCount: searchResults.length,
-                                            separatorBuilder: (_, __) => SizedBox(height: 8),
-                                            itemBuilder: (context, index) {
-                                              final quiz = searchResults[index];
-                                              return InkWell(
-                                                onTap: () {
-                                                  Navigator.of(context).pop();
-                                                  context.pushNamed(
-                                                    DetailScreenWidget.routeName,
-                                                    queryParameters: {
-                                                      'catId': serializeParam(
-                                                        getJsonField(quiz, r'''$.categoryId''').toString(),
-                                                        ParamType.String,
-                                                      ),
-                                                      'name': serializeParam(
-                                                        getJsonField(quiz, r'''$.name''').toString(),
-                                                        ParamType.String,
-                                                      ),
-                                                      'image': serializeParam(
-                                                        '${FFAppConstants.imageBaseURL}${getJsonField(quiz, r'''$.image''').toString()}',
-                                                        ParamType.String,
-                                                      ),
-                                                      'quizTime': serializeParam(
-                                                        getJsonField(quiz, r'''$.minutes_per_quiz''').toString(),
-                                                        ParamType.String,
-                                                      ),
-                                                      'description': serializeParam(
-                                                        getJsonField(quiz, r'''$.description''').toString(),
-                                                        ParamType.String,
-                                                      ),
-                                                      'quizID': serializeParam(
-                                                        getJsonField(quiz, r'''$._id''').toString(),
-                                                        ParamType.String,
-                                                      ),
-                                                      'ques': serializeParam(
-                                                        getJsonField(quiz, r'''$.total_questions'''),
-                                                        ParamType.int,
-                                                      ),
-                                                      'title': serializeParam(
-                                                        getJsonField(quiz, r'''$.name''').toString(),
-                                                        ParamType.String,
-                                                      ),
-                                                      'timerStatus': serializeParam(
-                                                        getJsonField(quiz, r'''$.timer_status'''),
-                                                        ParamType.int,
-                                                      ),
-                                                    }.withoutNulls,
-                                                  );
-                                                },
-                                                child: Container(
-                                                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                                                  decoration: BoxDecoration(
-                                                    color: FlutterFlowTheme.of(context).secondaryBackground,
-                                                    borderRadius: BorderRadius.circular(8),
-                                                  ),
-                                                  child: Row(
-                                                    children: [
-                                                      ClipRRect(
-                                                        borderRadius: BorderRadius.circular(8),
-                                                        child: CachedNetworkImage(
-                                                          imageUrl: '${FFAppConstants.imageBaseURL}${getJsonField(quiz, r'''$.image''').toString()}',
-                                                          width: 40,
-                                                          height: 40,
-                                                          fit: BoxFit.cover,
-                                                        ),
-                                                      ),
-                                                      SizedBox(width: 12),
-                                                      Expanded(
-                                                        child: Text(
-                                                          getJsonField(quiz, r'''$.name''').toString(),
-                                                          style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                            fontFamily: 'Roboto',
-                                                            fontSize: 16.0,
-                                                            fontWeight: FontWeight.w500,
-                                                            useGoogleFonts: false,
-                                                          ),
-                                                          maxLines: 2,
-                                                          overflow: TextOverflow.ellipsis,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
+              // Search functionality removed since quizzes are no longer displayed
             ],
           ),
           body: Builder(
@@ -714,14 +526,37 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget>
                                                                       ),
                                                                     Padding(
                                                                       padding: const EdgeInsets.only(top: 0.0, left: 16.0, right: 16.0, bottom: 8.0),
+                                                                      child: GestureDetector(
+                                                                        onTap: () {
+                                                                          print('=== CATEGORY TAPPED ===');
+                                                                          print('Category name: $categoryName');
+                                                                          print('Category ID: $categoryId');
+                                                                          print('Attempting navigation...');
+                                                                          try {
+                                                                            Navigator.push(
+                                                                              context,
+                                                                              MaterialPageRoute(
+                                                                                builder: (context) => CategoryDetailPageWidget(
+                                                                                  title: categoryName,
+                                                                                  catId: categoryId,
+                                                                                ),
+                                                                              ),
+                                                                            );
+                                                                            print('Navigation call completed');
+                                                                          } catch (e) {
+                                                                            print('Navigation error: $e');
+                                                                          }
+                                                                        },
                                                                       child: Text(
                                                                         categoryName,
                                                                         style: FlutterFlowTheme.of(context).bodyMedium.override(
                                                                               fontFamily: 'Roboto',
                                                                               fontSize: 18.0,
                                                                               fontWeight: FontWeight.w600,
+                                                                                color: FlutterFlowTheme.of(context).primary,
                                                                               useGoogleFonts: false,
                                                                               lineHeight: 1.5,
+                                                                              ),
                                                                             ),
                                                                       ),
                                                                     ),
@@ -743,177 +578,94 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget>
                                                                     ),
                                                                     Container(
                                                                       width: double.infinity,
-                                                                      height: 105.0,
-                                                                      child: (FFAppState().isLogin &&
-                                                                              FFAppState().loginToken != null &&
-                                                                              FFAppState().loginToken!.isNotEmpty)
-                                                                          ? FutureBuilder<ApiCallResponse>(
-                                                                              future: GetquizbycategoryCall.call(
-                                                                                categoryId: categoryId,
-                                                                                token: FFAppState().loginToken,
-                                                                              ),
-                                                                              builder: (context, snapshot) {
-                                                                                if (!snapshot.hasData) {
-                                                                                  return Center(
-                                                                                    child: SizedBox(
-                                                                                      width: 30.0,
-                                                                                      height: 30.0,
-                                                                                      child: CircularProgressIndicator(
-                                                                                        valueColor:
-                                                                                            AlwaysStoppedAnimation<Color>(
-                                                                                          FlutterFlowTheme.of(context).primary,
-                                                                                        ),
-                                                                                      ),
+                                                                      height: 92.0,
+                                                                      child: Align(
+                                                                        alignment: Alignment.centerLeft,
+                                                                        child: Padding(
+                                                                          padding: EdgeInsets.only(left: 16.0),
+                                                                          child: InkWell(
+                                                                            splashColor: Colors.transparent,
+                                                                            focusColor: Colors.transparent,
+                                                                            hoverColor: Colors.transparent,
+                                                                            highlightColor: Colors.transparent,
+                                                                            onTap: () {
+                                                                              print('=== CATEGORY TAPPED ===');
+                                                                              print('Category name: $categoryName');
+                                                                              print('Category ID: $categoryId');
+                                                                              print('Attempting navigation...');
+                                                                              try {
+                                                                                Navigator.push(
+                                                                                  context,
+                                                                                  MaterialPageRoute(
+                                                                                    builder: (context) => CategoryDetailPageWidget(
+                                                                                      title: categoryName,
+                                                                                      catId: categoryId,
                                                                                     ),
-                                                                                  );
-                                                                                }
-                                                                                final quizResponse = snapshot.data!;
-                                                                                final quizzes = GetquizbycategoryCall.quizDetailsList(
-                                                                                        quizResponse.jsonBody)
-                                                                                    ?.toList() ??
-                                                                                [];
-                                                                                homePageQuizzes[categoryId] = quizzes;
-                                                                                if (quizzes.isEmpty) {
-                                                                                  return Center(
-                                                                                    child: Text(
-                                                                                      'No content available',
-                                                                                      style: FlutterFlowTheme.of(context).bodyMedium,
-                                                                                    ),
-                                                                                  );
-                                                                                }
-                                                                                return ListView.separated(
-                                                                                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                                                                                  scrollDirection: Axis.horizontal,
-                                                                                  itemCount: quizzes.length,
-                                                                                  separatorBuilder: (_, __) => SizedBox(width: 16.0),
-                                                                                  itemBuilder: (context, index) {
-                                                                                    final quiz = quizzes[index];
-                                                                                    return InkWell(
-                                                                                      splashColor: Colors.transparent,
-                                                                                      focusColor: Colors.transparent,
-                                                                                      hoverColor: Colors.transparent,
-                                                                                      highlightColor: Colors.transparent,
-                                                                                      onTap: () async {
-                                                                                        context.pushNamed(
-                                                                                          DetailScreenWidget.routeName,
-                                                                                          queryParameters: {
-                                                                                            'catId': serializeParam(
-                                                                                              categoryId,
-                                                                                              ParamType.String,
-                                                                                            ),
-                                                                                            'name': serializeParam(
-                                                                                              getJsonField(quiz, r'''$.name''')
-                                                                                                  .toString(),
-                                                                                              ParamType.String,
-                                                                                            ),
-                                                                                            'image': serializeParam(
-                                                                                              '${FFAppConstants.imageBaseURL}${getJsonField(quiz, r'''$.image''').toString()}',
-                                                                                              ParamType.String,
-                                                                                            ),
-                                                                                            'quizTime': serializeParam(
-                                                                                              getJsonField(quiz,
-                                                                                                      r'''$.minutes_per_quiz''')
-                                                                                                  .toString(),
-                                                                                              ParamType.String,
-                                                                                            ),
-                                                                                            'description': serializeParam(
-                                                                                              getJsonField(quiz,
-                                                                                                      r'''$.description''')
-                                                                                                  .toString(),
-                                                                                              ParamType.String,
-                                                                                            ),
-                                                                                            'quizID': serializeParam(
-                                                                                              getJsonField(quiz, r'''$._id''')
-                                                                                                  .toString(),
-                                                                                              ParamType.String,
-                                                                                            ),
-                                                                                            'ques': serializeParam(
-                                                                                              getJsonField(quiz,
-                                                                                                  r'''$.total_questions'''),
-                                                                                              ParamType.int,
-                                                                                            ),
-                                                                                            'title': serializeParam(
-                                                                                              getJsonField(quiz, r'''$.name''')
-                                                                                                  .toString(),
-                                                                                              ParamType.String,
-                                                                                            ),
-                                                                                            'timerStatus': serializeParam(
-                                                                                              getJsonField(quiz,
-                                                                                                  r'''$.timer_status'''),
-                                                                                              ParamType.int,
-                                                                                            ),
-                                                                                          }.withoutNulls,
-                                                                                        );
-                                                                                      },
-                                                                                      child: Container(
-                                                                                        width: 87.0,
-                                                                                        height: 87.0,
-                                                                                        decoration: BoxDecoration(
-                                                                                          color:
-                                                                                              FlutterFlowTheme.of(context).primaryBackground,
-                                                                                          borderRadius: BorderRadius.circular(12.0),
-                                                                                        ),
-                                                                                        child: Column(
-                                                                                          mainAxisSize: MainAxisSize.max,
-                                                                                          mainAxisAlignment: MainAxisAlignment.center,
-                                                                                          children: [
-                                                                                            Container(
-                                                                                              width: 48.0,
-                                                                                              height: 48.0,
-                                                                                              decoration: BoxDecoration(
-                                                                                                color: FlutterFlowTheme.of(context)
-                                                                                                    .primaryBackground,
-                                                                                                borderRadius:
-                                                                                                    BorderRadius.circular(8.0),
-                                                                                              ),
-                                                                                              child: ClipRRect(
-                                                                                                borderRadius:
-                                                                                                    BorderRadius.circular(0.0),
-                                                                                                child: CachedNetworkImage(
-                                                                                                  fadeInDuration:
-                                                                                                      Duration(milliseconds: 200),
-                                                                                                  fadeOutDuration:
-                                                                                                      Duration(milliseconds: 200),
-                                                                                                  imageUrl:
-                                                                                                      '${FFAppConstants.imageBaseURL}${getJsonField(quiz, r'''$.image''').toString()}',
-                                                                                                  width: 48.0,
-                                                                                                  height: 48.0,
-                                                                                                  fit: BoxFit.cover,
-                                                                                                ),
-                                                                                              ),
-                                                                                            ),
-                                                                                            Padding(
-                                                                                              padding: EdgeInsetsDirectional.fromSTEB(
-                                                                                                  0.0, 8.0, 0.0, 0.0),
-                                                                                              child: Text(
-                                                                                                getJsonField(quiz, r'''$.name''')
-                                                                                                    .toString(),
-                                                                                                textAlign: TextAlign.center,
-                                                                                                maxLines: 2,
-                                                                                                style: FlutterFlowTheme.of(context)
-                                                                                                    .bodyMedium
-                                                                                                    .override(
-                                                                                                      fontFamily: 'Roboto',
-                                                                                                      fontSize: 14.0,
-                                                                                                      letterSpacing: 0.0,
-                                                                                                      useGoogleFonts: false,
-                                                                                                    ),
-                                                                                              ),
-                                                                                            ),
-                                                                                          ],
-                                                                                        ),
-                                                                                      ),
-                                                                                    );
-                                                                                  },
+                                                                                  ),
                                                                                 );
-                                                                              },
-                                                                            )
-                                                                          : Center(
-                                                                              child: Text(
-                                                                                'Login to see quizzes',
-                                                                                style: FlutterFlowTheme.of(context).bodyMedium,
+                                                                                print('Navigation call completed');
+                                                                              } catch (e) {
+                                                                                print('Navigation error: $e');
+                                                                              }
+                                                                            },
+                                                                            child: Container(
+                                                                              width: 70.0,
+                                                                              height: 70.0,
+                                                                              decoration: BoxDecoration(
+                                                                                color: FlutterFlowTheme.of(context).primaryBackground,
+                                                                                borderRadius: BorderRadius.circular(12.0),
+                                                                              ),
+                                                                              child: Column(
+                                                                                mainAxisSize: MainAxisSize.max,
+                                                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                                                children: [
+                                                                                  Container(
+                                                                                    width: 40.0,
+                                                                                    height: 40.0,
+                                                                                    decoration: BoxDecoration(
+                                                                                      color: FlutterFlowTheme.of(context).primaryBackground,
+                                                                                      borderRadius: BorderRadius.circular(8.0),
+                                                                                    ),
+                                                                                    child: ClipRRect(
+                                                                                      borderRadius: BorderRadius.circular(8.0),
+                                                                                      child: CachedNetworkImage(
+                                                                                        fadeInDuration: Duration(milliseconds: 200),
+                                                                                        fadeOutDuration: Duration(milliseconds: 200),
+                                                                                        imageUrl: '${FFAppConstants.imageBaseURL}${getJsonField(category, r'''$.image''').toString()}',
+                                                                                        width: 40.0,
+                                                                                        height: 40.0,
+                                                                                        fit: BoxFit.cover,
+                                                                                        placeholder: (context, url) => Center(
+                                                                                          child: CircularProgressIndicator(
+                                                                                            valueColor: AlwaysStoppedAnimation<Color>(
+                                                                                              FlutterFlowTheme.of(context).primary,
+                                                                                            ),
+                                                                                          ),
+                                                                                        ),
+                                                                                        errorWidget: (context, url, error) => Icon(Icons.error),
+                                                                                      ),
+                                                                                    ),
+                                                                                  ),
+                                                                                  Padding(
+                                                                                    padding: EdgeInsetsDirectional.fromSTEB(0.0, 6.0, 0.0, 0.0),
+                                                                                    child: Text(
+                                                                                      categoryName,
+                                                                                      textAlign: TextAlign.center,
+                                                                                      maxLines: 2,
+                                                                                      style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                                                                        fontFamily: 'Roboto',
+                                                                                        fontSize: 12.0,
+                                                                                        letterSpacing: 0.0,
+                                                                                        useGoogleFonts: false,
+                                                                                      ),
+                                                                                    ),
+                                                                                  ),
+                                                                                ],
                                                                               ),
                                                                             ),
+                                                                          ),
+                                                                        ),
+                                                                      ),
                                                                     ),
                                                                   ],
                                                                 );
@@ -1218,8 +970,8 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget>
                                                                   safeSetState(
                                                                       () {});
 
-                                                                  context.pushNamed(
-                                                                      SelfChellengeWidget
+                                                                  context
+                                                                      .pushNamed(SelfChellengeWidget
                                                                           .routeName);
                                                                 },
                                                                 child:

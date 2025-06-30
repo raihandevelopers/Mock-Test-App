@@ -24,10 +24,10 @@ class QuizquestionsScreenCopyModel
   // Stores action output result for [Backend Call - API (GetquestionsbyquizidApi)] action in quizquestions_screenCopy widget.
   ApiCallResponse? quizRes;
   // State field(s) for Timer widget.
-  final timerInitialTimeMs = 300000;
-  int timerMilliseconds = 300000;
+  final timerInitialTimeMs = 0;
+  int timerMilliseconds = 0;
   String timerValue = StopWatchTimer.getDisplayTime(
-    300000,
+    0,
     hours: false,
     milliSecond: false,
   );
