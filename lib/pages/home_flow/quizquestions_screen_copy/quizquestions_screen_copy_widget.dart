@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 import 'quizquestions_screen_copy_model.dart';
+import 'dart:convert';
 export 'quizquestions_screen_copy_model.dart';
 
 class QuizquestionsScreenCopyWidget extends StatefulWidget {
@@ -25,6 +26,8 @@ class QuizquestionsScreenCopyWidget extends StatefulWidget {
     this.image,
     this.time,
     this.quizID,
+    this.correctAnsReward,
+    this.penaltyPerQuestion,
   });
 
   final String? title;
@@ -32,6 +35,8 @@ class QuizquestionsScreenCopyWidget extends StatefulWidget {
   final String? image;
   final String? time;
   final String? quizID;
+  final double? correctAnsReward;
+  final double? penaltyPerQuestion;
 
   static String routeName = 'quizquestions_screenCopy';
   static String routePath = '/quizquestionsScreenCopy';
@@ -44,6 +49,7 @@ class QuizquestionsScreenCopyWidget extends StatefulWidget {
 class _QuizquestionsScreenCopyWidgetState
     extends State<QuizquestionsScreenCopyWidget> {
   late QuizquestionsScreenCopyModel _model;
+  bool _didParseParams = false;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -71,9 +77,42 @@ class _QuizquestionsScreenCopyWidgetState
       _model.timerController.onResetTimer();
 
       _model.timerController.onStartTimer();
+      print('QUIZ COPY DEBUG: correctAnsReward: ' + (widget.correctAnsReward?.toString() ?? 'null'));
+      print('QUIZ COPY DEBUG: penaltyPerQuestion: ' + (widget.penaltyPerQuestion?.toString() ?? 'null'));
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didParseParams) {
+      _didParseParams = true;
+      double? _parseDouble(dynamic value) {
+        if (value == null) return null;
+        if (value is double) return value;
+        if (value is int) return value.toDouble();
+        if (value is String) return double.tryParse(value);
+        return null;
+      }
+      if (widget.correctAnsReward == null && (ModalRoute.of(context)?.settings.arguments is Map)) {
+        final args = ModalRoute.of(context)!.settings.arguments as Map;
+        final parsed = _parseDouble(args['correctAnsReward']);
+        if (parsed != null) {
+          // ignore: invalid_use_of_protected_member
+          (widget as dynamic).correctAnsReward = parsed;
+        }
+      }
+      if (widget.penaltyPerQuestion == null && (ModalRoute.of(context)?.settings.arguments is Map)) {
+        final args = ModalRoute.of(context)!.settings.arguments as Map;
+        final parsed = _parseDouble(args['penaltyPerQuestion']);
+        if (parsed != null) {
+          // ignore: invalid_use_of_protected_member
+          (widget as dynamic).penaltyPerQuestion = parsed;
+        }
+      }
+    }
   }
 
   @override
@@ -86,6 +125,74 @@ class _QuizquestionsScreenCopyWidgetState
   @override
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
+
+    // Extract correctAnsReward and penaltyPerQuestion from API response if available
+    double correctAnsReward = 0.0;
+    double penaltyPerQuestion = 0.0;
+    final quizJson = _model.quizRes?.jsonBody;
+    dynamic quizMap = quizJson;
+    if (quizJson is String) {
+      try {
+        quizMap = jsonDecode(quizJson);
+      } catch (e) {
+        quizMap = {};
+      }
+    }
+    // Extract from top-level data fields as per backend
+    final apiCorrect = getJsonField(quizMap, r'$.data.correctAnsReward');
+    final apiPenalty = getJsonField(quizMap, r'$.data.penaltyPerQuestion');
+    if (apiCorrect != null) {
+      if (apiCorrect is num) {
+        correctAnsReward = apiCorrect.toDouble();
+      } else if (apiCorrect is String) {
+        correctAnsReward = double.tryParse(apiCorrect) ?? 0.0;
+      }
+    }
+    if (apiPenalty != null) {
+      if (apiPenalty is num) {
+        penaltyPerQuestion = apiPenalty.toDouble();
+      } else if (apiPenalty is String) {
+        penaltyPerQuestion = double.tryParse(apiPenalty) ?? 0.0;
+      }
+    }
+    // Questions and totalMark logic
+    final questions = getJsonField(quizMap, r'$.data.questionsDetails');
+    int totalQuestions = 0;
+    if (questions is List) {
+      totalQuestions = questions.length;
+    }
+    double totalMark = correctAnsReward * totalQuestions.toDouble();
+    print('QUIZ COPY DEBUG (API): correctAnsReward: ' + correctAnsReward.toString());
+    print('QUIZ COPY DEBUG (API): penaltyPerQuestion: ' + penaltyPerQuestion.toString());
+    print('QUIZ COPY DEBUG (API): totalMark: ' + totalMark.toString());
+
+    // Extract quiz duration and timer status from the first question's quizId
+    int quizDurationMinutes = 0;
+    int timerStatus = 0;
+    if (questions is List && questions.isNotEmpty) {
+      final quizIdObj = getJsonField(questions[0], r'$.quizId');
+      final apiDuration = getJsonField(quizIdObj, r'$.minutes_per_quiz');
+      final apiTimerStatus = getJsonField(quizIdObj, r'$.timer_status');
+      if (apiDuration != null) {
+        if (apiDuration is num) {
+          quizDurationMinutes = apiDuration.toInt();
+        } else if (apiDuration is String) {
+          quizDurationMinutes = int.tryParse(apiDuration) ?? 0;
+        }
+      }
+      if (apiTimerStatus != null) {
+        if (apiTimerStatus is num) {
+          timerStatus = apiTimerStatus.toInt();
+        } else if (apiTimerStatus is String) {
+          timerStatus = int.tryParse(apiTimerStatus) ?? 0;
+        }
+      }
+    }
+    print('QUIZ COPY DEBUG (API): quizDurationMinutes: ' + quizDurationMinutes.toString());
+    print('QUIZ COPY DEBUG (API): timerStatus: ' + timerStatus.toString());
+    if (timerStatus == 1) {
+      print('QUIZ COPY DEBUG: Timer widget should be shown with duration: ' + quizDurationMinutes.toString() + ' minutes');
+    }
 
     return GestureDetector(
       onTap: () {
@@ -411,6 +518,102 @@ class _QuizquestionsScreenCopyWidgetState
                             color: FlutterFlowTheme.of(context).black10,
                           ),
                         ),
+                        // Add timer/progress bar if timerStatus == 1
+                        if (timerStatus == 1)
+                          Padding(
+                            padding: EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Padding(
+                                    padding: EdgeInsetsDirectional.fromSTEB(0.0, 15.0, 0.0, 0.0),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(15.0),
+                                      ),
+                                      child: custom_widgets.LinearBarTimer(
+                                        width: 309.0,
+                                        height: 10.0,
+                                        time: quizDurationMinutes * 60 * 1000,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  width: 100.0,
+                                  height: 34.0,
+                                  decoration: BoxDecoration(
+                                    color: FlutterFlowTheme.of(context).primary,
+                                    borderRadius: BorderRadius.circular(20.0),
+                                  ),
+                                  alignment: AlignmentDirectional(0.0, 0.0),
+                                  child: FlutterFlowTimer(
+                                    initialTime: quizDurationMinutes * 60 * 1000,
+                                    getDisplayTime: (value) => StopWatchTimer.getDisplayTime(
+                                      value,
+                                      hours: false,
+                                      milliSecond: false,
+                                    ),
+                                    controller: _model.timerController,
+                                    updateStateInterval: Duration(milliseconds: 1000),
+                                    onChanged: (value, displayTime, shouldUpdate) {
+                                      _model.timerMilliseconds = value;
+                                      _model.timerValue = displayTime;
+                                      if (shouldUpdate) safeSetState(() {});
+                                    },
+                                    textAlign: TextAlign.center,
+                                    style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                      fontFamily: 'Roboto',
+                                      color: Colors.white,
+                                      fontSize: 16.0,
+                                      useGoogleFonts: false,
+                                    ),
+                                    onEnded: () async {
+                                      await showDialog(
+                                        barrierDismissible: false,
+                                        context: context,
+                                        builder: (dialogContext) {
+                                          return Dialog(
+                                            elevation: 0,
+                                            insetPadding: EdgeInsets.zero,
+                                            backgroundColor: Colors.transparent,
+                                            alignment: AlignmentDirectional(0.0, 0.0).resolve(Directionality.of(context)),
+                                            child: GestureDetector(
+                                              onTap: () {
+                                                FocusScope.of(dialogContext).unfocus();
+                                                FocusManager.instance.primaryFocus?.unfocus();
+                                              },
+                                              child: TimeoutDialogWidget(
+                                                istimeout: () async {
+                                                  FFAppState().clearCoinsCache();
+                                                  context.pushNamed(
+                                                    QuizResultWidget.routeName,
+                                                    queryParameters: {
+                                                      'correctAnswer': serializeParam(FFAppState().correctQues, ParamType.int),
+                                                      'wrongAnswer': serializeParam(FFAppState().wrongQues, ParamType.int),
+                                                      'totalQuestion': serializeParam(questions is List ? questions.length : 0, ParamType.int),
+                                                      'notAnswer': serializeParam(FFAppState().notAnswerQues, ParamType.int),
+                                                      'quizID': serializeParam(widget.quizID, ParamType.String),
+                                                      'title': serializeParam(widget.title, ParamType.String),
+                                                      'correctAnsReward': serializeParam(correctAnsReward, ParamType.double),
+                                                      'penaltyPerQuestion': serializeParam(penaltyPerQuestion, ParamType.double),
+                                                    }.withoutNulls,
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ].divide(SizedBox(width: 16.0)),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -559,46 +762,14 @@ class _QuizquestionsScreenCopyWidgetState
                                                         QuizResultWidget
                                                             .routeName,
                                                         queryParameters: {
-                                                          'correctAnswer':
-                                                              serializeParam(
-                                                            FFAppState()
-                                                                .correctQues,
-                                                            ParamType.int,
-                                                          ),
-                                                          'wrongAnswer':
-                                                              serializeParam(
-                                                            FFAppState()
-                                                                .wrongQues,
-                                                            ParamType.int,
-                                                          ),
-                                                          'totalQuestion':
-                                                              serializeParam(
-                                                            QuizGroup
-                                                                .getquestionsbyquizidApiCall
-                                                                .questionDetailsList(
-                                                                  (_model.quizRes
-                                                                          ?.jsonBody ??
-                                                                      ''),
-                                                                )
-                                                                ?.length,
-                                                            ParamType.int,
-                                                          ),
-                                                          'notAnswer':
-                                                              serializeParam(
-                                                            FFAppState()
-                                                                .notAnswerQues,
-                                                            ParamType.int,
-                                                          ),
-                                                          'quizID':
-                                                              serializeParam(
-                                                            FFAppState().quizID,
-                                                            ParamType.String,
-                                                          ),
-                                                          'title':
-                                                              serializeParam(
-                                                            widget.title,
-                                                            ParamType.String,
-                                                          ),
+                                                          'correctAnswer': serializeParam(FFAppState().correctQues, ParamType.int),
+                                                          'wrongAnswer': serializeParam(FFAppState().wrongQues, ParamType.int),
+                                                          'totalQuestion': serializeParam(questions is List ? questions.length : 0, ParamType.int),
+                                                          'notAnswer': serializeParam(FFAppState().notAnswerQues, ParamType.int),
+                                                          'quizID': serializeParam(widget.quizID, ParamType.String),
+                                                          'title': serializeParam(widget.title, ParamType.String),
+                                                          'correctAnsReward': serializeParam(correctAnsReward, ParamType.double),
+                                                          'penaltyPerQuestion': serializeParam(penaltyPerQuestion, ParamType.double),
                                                         }.withoutNulls,
                                                       );
                                                     },
@@ -1370,8 +1541,8 @@ class _QuizquestionsScreenCopyWidgetState
                                                                             (_model.quizRes?.jsonBody ?? ''),
                                                                           )
                                                                           ?.length,
-                                                                      ParamType
-                                                                          .int,
+                                                                            ParamType
+                                                                            .int,
                                                                     ),
                                                                     'notAnswer':
                                                                         serializeParam(
@@ -1460,9 +1631,9 @@ class _QuizquestionsScreenCopyWidgetState
                                                                 ?.jsonBody ??
                                                             ''),
                                                       )!
-                                                      .elementAtOrNull(_model
-                                                              .pageViewCurrentIndex +
-                                                          1))!);
+                                                      .elementAtOrNull(
+                                                          _model.pageViewCurrentIndex +
+                                                              1))!);
                                                   safeSetState(() {});
                                                   _model.userAnswer = null;
                                                   _model.actualAnswer = null;
@@ -1628,7 +1799,7 @@ class _QuizquestionsScreenCopyWidgetState
                                                                               (_model.quizRes?.jsonBody ?? ''),
                                                                             )
                                                                             ?.length,
-                                                                        ParamType
+                                                                            ParamType
                                                                             .int,
                                                                       ),
                                                                       'notAnswer':
@@ -1706,7 +1877,8 @@ class _QuizquestionsScreenCopyWidgetState
                                                           .pageViewController
                                                           ?.nextPage(
                                                         duration: Duration(
-                                                            milliseconds: 300),
+                                                            milliseconds:
+                                                                300),
                                                         curve: Curves.ease,
                                                       );
                                                     }
@@ -1716,7 +1888,7 @@ class _QuizquestionsScreenCopyWidgetState
                                                         .questionTypeList(
                                                           (_model.quizRes
                                                                   ?.jsonBody ??
-                                                              ''),
+                                                                  ''),
                                                         )!
                                                         .elementAtOrNull(
                                                             _model.pageViewCurrentIndex +
@@ -2006,7 +2178,8 @@ class _QuizquestionsScreenCopyWidgetState
                                                                   _model.pageViewCurrentIndex +
                                                                       1))!);
                                                       safeSetState(() {});
-                                                      _model.userAnswer = null;
+                                                      _model.userAnswer =
+                                                          null;
                                                       _model.actualAnswer =
                                                           null;
                                                       safeSetState(() {});

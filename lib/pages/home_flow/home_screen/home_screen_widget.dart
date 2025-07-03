@@ -22,6 +22,8 @@ import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 import 'home_screen_model.dart';
 import 'dart:ui';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 export 'home_screen_model.dart';
 
 class HomeScreenWidget extends StatefulWidget {
@@ -489,78 +491,34 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget>
                                                           ))!
                                                               .isNotEmpty)
                                                         // Category with Quizzes Section
-                                                        Builder(
-                                                          builder: (context) {
-                                                            final allCategories = (QuizGroup.getAllCategoriesCall
-                                                                      .category(
-                                                                        categoriesContainerGetAllCategoriesResponse.jsonBody,
-                                                                      )
-                                                                      ?.toList() ??
-                                                                  []);
-                                                            allCategories.removeWhere((category) => getJsonField(category, r'''$._id''').toString() == '6855c7f44a6a5ab0e8254dc6');
+                                                        FutureBuilder<List<CategoryGroup>>(
+                                                          future: fetchCategoryGroups(),
+                                                          builder: (context, snapshot) {
+                                                            print('Category group snapshot: data=${snapshot.data}, error=${snapshot.error}, hasData=${snapshot.hasData}, connectionState=${snapshot.connectionState}');
+                                                            if (!snapshot.hasData) {
+                                                              return BlankComponentWidget();
+                                                            }
+                                                            final groups = snapshot.data!;
                                                             return Column(
                                                               crossAxisAlignment: CrossAxisAlignment.start,
-                                                              children: allCategories.asMap().entries.map((entry) {
-                                                                final idx = entry.key;
-                                                                final category = entry.value;
-                                                                final categoryName = getJsonField(category, r'''$.name''').toString();
-                                                                final categoryId = getJsonField(category, r'''$._id''').toString();
+                                                              children: groups.map((group) {
                                                                 return Column(
                                                                   crossAxisAlignment: CrossAxisAlignment.start,
                                                                   children: [
-                                                                    if (idx != 0)
-                                                                      Row(
-                                                                        children: [
-                                                                          Expanded(
-                                                                            child: ClipRect(
-                                                                              child: BackdropFilter(
-                                                                                filter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0),
-                                                                                child: Container(
-                                                                                  height: 1.0,
-                                                                                  color: Colors.black.withOpacity(0.15),
-                                                                                ),
-                                                                              ),
-                                                                            ),
-                                                                          ),
-                                                                        ],
-                                                                      ),
                                                                     Padding(
                                                                       padding: const EdgeInsets.only(top: 0.0, left: 16.0, right: 16.0, bottom: 8.0),
-                                                                      child: GestureDetector(
-                                                                        onTap: () {
-                                                                          print('=== CATEGORY TAPPED ===');
-                                                                          print('Category name: $categoryName');
-                                                                          print('Category ID: $categoryId');
-                                                                          print('Attempting navigation...');
-                                                                          try {
-                                                                            Navigator.push(
-                                                                              context,
-                                                                              MaterialPageRoute(
-                                                                                builder: (context) => CategoryDetailPageWidget(
-                                                                                  title: categoryName,
-                                                                                  catId: categoryId,
-                                                                                ),
-                                                                              ),
-                                                                            );
-                                                                            print('Navigation call completed');
-                                                                          } catch (e) {
-                                                                            print('Navigation error: $e');
-                                                                          }
-                                                                        },
                                                                       child: Text(
-                                                                        categoryName,
+                                                                        group.displayName,
                                                                         style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                              fontFamily: 'Roboto',
-                                                                              fontSize: 18.0,
-                                                                              fontWeight: FontWeight.w600,
-                                                                                color: FlutterFlowTheme.of(context).primary,
-                                                                              useGoogleFonts: false,
-                                                                              lineHeight: 1.5,
-                                                                              ),
-                                                                            ),
+                                                                          fontFamily: 'Roboto',
+                                                                          fontSize: 18.0,
+                                                                          fontWeight: FontWeight.w600,
+                                                                          color: FlutterFlowTheme.of(context).primary,
+                                                                          useGoogleFonts: false,
+                                                                          lineHeight: 1.5,
+                                                                        ),
                                                                       ),
                                                                     ),
-                                                                    // Full-width divider below category name
                                                                     Row(
                                                                       children: [
                                                                         Expanded(
@@ -579,34 +537,29 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget>
                                                                     Container(
                                                                       width: double.infinity,
                                                                       height: 92.0,
-                                                                      child: Align(
-                                                                        alignment: Alignment.centerLeft,
-                                                                        child: Padding(
-                                                                          padding: EdgeInsets.only(left: 16.0),
-                                                                          child: InkWell(
+                                                                      child: ListView.separated(
+                                                                        scrollDirection: Axis.horizontal,
+                                                                        padding: EdgeInsets.only(left: 16.0, right: 16.0),
+                                                                        itemCount: group.categories.length,
+                                                                        separatorBuilder: (_, __) => SizedBox(width: 16.0),
+                                                                        itemBuilder: (context, index) {
+                                                                          final category = group.categories[index];
+                                                                          return InkWell(
                                                                             splashColor: Colors.transparent,
                                                                             focusColor: Colors.transparent,
                                                                             hoverColor: Colors.transparent,
                                                                             highlightColor: Colors.transparent,
                                                                             onTap: () {
-                                                                              print('=== CATEGORY TAPPED ===');
-                                                                              print('Category name: $categoryName');
-                                                                              print('Category ID: $categoryId');
-                                                                              print('Attempting navigation...');
-                                                                              try {
-                                                                                Navigator.push(
-                                                                                  context,
-                                                                                  MaterialPageRoute(
-                                                                                    builder: (context) => CategoryDetailPageWidget(
-                                                                                      title: categoryName,
-                                                                                      catId: categoryId,
-                                                                                    ),
+                                                                              print('Navigating to category: id=${category.id}, name=${category.displayName.isNotEmpty ? category.displayName : category.name}');
+                                                                              Navigator.push(
+                                                                                context,
+                                                                                MaterialPageRoute(
+                                                                                  builder: (context) => CategoryDetailPageWidget(
+                                                                                    title: category.displayName.isNotEmpty ? category.displayName : category.name,
+                                                                                    catId: category.id,
                                                                                   ),
-                                                                                );
-                                                                                print('Navigation call completed');
-                                                                              } catch (e) {
-                                                                                print('Navigation error: $e');
-                                                                              }
+                                                                                ),
+                                                                              );
                                                                             },
                                                                             child: Container(
                                                                               width: 70.0,
@@ -631,7 +584,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget>
                                                                                       child: CachedNetworkImage(
                                                                                         fadeInDuration: Duration(milliseconds: 200),
                                                                                         fadeOutDuration: Duration(milliseconds: 200),
-                                                                                        imageUrl: '${FFAppConstants.imageBaseURL}${getJsonField(category, r'''$.image''').toString()}',
+                                                                                        imageUrl: '${FFAppConstants.imageBaseURL}${category.image}',
                                                                                         width: 40.0,
                                                                                         height: 40.0,
                                                                                         fit: BoxFit.cover,
@@ -649,7 +602,7 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget>
                                                                                   Padding(
                                                                                     padding: EdgeInsetsDirectional.fromSTEB(0.0, 6.0, 0.0, 0.0),
                                                                                     child: Text(
-                                                                                      categoryName,
+                                                                                      category.displayName.isNotEmpty ? category.displayName : category.name,
                                                                                       textAlign: TextAlign.center,
                                                                                       maxLines: 2,
                                                                                       style: FlutterFlowTheme.of(context).bodyMedium.override(
@@ -663,8 +616,8 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget>
                                                                                 ],
                                                                               ),
                                                                             ),
-                                                                          ),
-                                                                        ),
+                                                                          );
+                                                                        },
                                                                       ),
                                                                     ),
                                                                   ],
@@ -1306,5 +1259,48 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget>
         ),
       ),
     );
+  }
+}
+
+class Category {
+  final String id;
+  final String name;
+  final String displayName;
+  final String image;
+
+  Category({required this.id, required this.name, required this.displayName, required this.image});
+
+  factory Category.fromJson(Map<String, dynamic> json) => Category(
+    id: json['_id'],
+    name: json['name'],
+    displayName: json['displayName'] ?? '',
+    image: json['image'] ?? '',
+  );
+}
+
+class CategoryGroup {
+  final String id;
+  final String displayName;
+  final List<Category> categories;
+
+  CategoryGroup({required this.id, required this.displayName, required this.categories});
+
+  factory CategoryGroup.fromJson(Map<String, dynamic> json) => CategoryGroup(
+    id: json['_id'],
+    displayName: json['displayName'],
+    categories: (json['categories'] as List).map((e) => Category.fromJson(e)).toList(),
+  );
+}
+
+Future<List<CategoryGroup>> fetchCategoryGroups() async {
+  final response = await http.get(Uri.parse('https://quiz.deltospark.com/api/category-groups'));
+  print('Category groups raw response: ${response.body}');
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body);
+    print('Category groups decoded data: $data');
+    return (data['data'] as List).map((e) => CategoryGroup.fromJson(e)).toList();
+  } else {
+    print('Failed to load category groups: ${response.statusCode}');
+    throw Exception('Failed to load category groups');
   }
 }

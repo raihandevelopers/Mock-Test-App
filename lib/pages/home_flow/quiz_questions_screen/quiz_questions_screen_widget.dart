@@ -18,6 +18,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 import 'quiz_questions_screen_model.dart';
 import 'package:google_cloud_translation/google_cloud_translation.dart';
+import 'package:json_annotation/json_annotation.dart';
 export 'quiz_questions_screen_model.dart';
 
 class QuizQuestionsScreenWidget extends StatefulWidget {
@@ -31,8 +32,6 @@ class QuizQuestionsScreenWidget extends StatefulWidget {
     this.ques,
     this.quizID,
     this.timerStatus,
-    this.correctAnsReward,
-    this.penaltyPerQuestion,
   });
 
   final String? title;
@@ -43,8 +42,6 @@ class QuizQuestionsScreenWidget extends StatefulWidget {
   final int? ques;
   final String? quizID;
   final int? timerStatus;
-  final double? correctAnsReward;
-  final double? penaltyPerQuestion;
 
   static String routeName = 'quiz_questions_screen';
   static String routePath = '/quizQuestionsScreen';
@@ -56,6 +53,7 @@ class QuizQuestionsScreenWidget extends StatefulWidget {
 
 class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
   late QuizQuestionsScreenModel _model;
+  bool _didParseParams = false;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -97,11 +95,14 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
       _model.timerController.onStartTimer();
 
       print('QUIZ DEBUG: Received quiz object: ' + (_model.quizRes?.jsonBody ?? '').toString());
-      print('QUIZ DEBUG: correctAnsReward: ' + (widget.correctAnsReward?.toString() ?? 'null'));
-      print('QUIZ DEBUG: penaltyPerQuestion: ' + (widget.penaltyPerQuestion?.toString() ?? 'null'));
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
   }
 
   Future<void> _translateQuestionAndOptions(String question, List<String> options) async {
@@ -130,13 +131,69 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
   Widget build(BuildContext context) {
     context.watch<FFAppState>();
 
-    final double correctAnsReward = widget.correctAnsReward ?? 0.0;
-    final double penaltyPerQuestion = widget.penaltyPerQuestion ?? 0.0;
-    FFAppState().correctQuesPoints = correctAnsReward;
-    FFAppState().wrongQuesPoints = penaltyPerQuestion;
+    // Extract correctAnsReward and penaltyPerQuestion from API response if available
+    double correctAnsReward = 0.0;
+    double penaltyPerQuestion = 0.0;
+    final quizJson = _model.quizRes?.jsonBody;
+    dynamic quizMap = quizJson;
+    if (quizJson is String) {
+      try {
+        quizMap = jsonDecode(quizJson);
+      } catch (e) {
+        quizMap = {};
+      }
+    }
+    // Extract from top-level data fields as per backend
+    final apiCorrect = getJsonField(quizMap, r'$.data.correctAnsReward');
+    final apiPenalty = getJsonField(quizMap, r'$.data.penaltyPerQuestion');
+    if (apiCorrect != null) {
+      if (apiCorrect is num) {
+        correctAnsReward = apiCorrect.toDouble();
+      } else if (apiCorrect is String) {
+        correctAnsReward = double.tryParse(apiCorrect) ?? 0.0;
+      }
+    }
+    if (apiPenalty != null) {
+      if (apiPenalty is num) {
+        penaltyPerQuestion = apiPenalty.toDouble();
+      } else if (apiPenalty is String) {
+        penaltyPerQuestion = double.tryParse(apiPenalty) ?? 0.0;
+      }
+    }
+    // Questions and totalMark logic
+    final questions = getJsonField(quizMap, r'$.data.questionsDetails');
+    int totalQuestions = 0;
+    if (questions is List) {
+      totalQuestions = questions.length;
+    }
+    double totalMark = correctAnsReward * totalQuestions.toDouble();
+    print('QUIZ DEBUG: correctAnsReward: ' + correctAnsReward.toString());
+    print('QUIZ DEBUG: penaltyPerQuestion: ' + penaltyPerQuestion.toString());
+    print('QUIZ DEBUG: totalMark: ' + totalMark.toString());
 
-    print('QUIZ DEBUG: Widget correctAnsReward: ' + (widget.correctAnsReward?.toString() ?? 'null'));
-    print('QUIZ DEBUG: Widget penaltyPerQuestion: ' + (widget.penaltyPerQuestion?.toString() ?? 'null'));
+    // Extract quiz duration and timer status from the first question's quizId
+    int quizDurationMinutes = 0;
+    int timerStatus = 0;
+    if (questions is List && questions.isNotEmpty) {
+      final quizIdObj = getJsonField(questions[0], r'$.quizId');
+      final apiDuration = getJsonField(quizIdObj, r'$.minutes_per_quiz');
+      final apiTimerStatus = getJsonField(quizIdObj, r'$.timer_status');
+      if (apiDuration != null) {
+        if (apiDuration is num) {
+          quizDurationMinutes = apiDuration.toInt();
+        } else if (apiDuration is String) {
+          quizDurationMinutes = int.tryParse(apiDuration) ?? 0;
+        }
+      }
+      if (apiTimerStatus != null) {
+        if (apiTimerStatus is num) {
+          timerStatus = apiTimerStatus.toInt();
+        } else if (apiTimerStatus is String) {
+          timerStatus = int.tryParse(apiTimerStatus) ?? 0;
+        }
+      }
+    }
+    print('QUIZ DEBUG: timerStatus: ' + timerStatus.toString() + ', quizDurationMinutes: ' + quizDurationMinutes.toString());
 
     return GestureDetector(
       onTap: () {
@@ -190,7 +247,7 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                             children: [
                               Container(
                                 width: double.infinity,
-                                height: 126.0,
+                                height: 170.0,
                                 decoration: BoxDecoration(
                                   color: FlutterFlowTheme.of(context)
                                       .secondaryBackground,
@@ -201,7 +258,7 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                   children: [
                                     Padding(
                                       padding: EdgeInsetsDirectional.fromSTEB(
-                                          16.0, 0.0, 16.0, 18.0),
+                                          16.0, 0.0, 16.0, 8.0),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.max,
                                         children: [
@@ -244,14 +301,148 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                         ],
                                       ),
                                     ),
-                                    Container(
-                                      width: double.infinity,
-                                      height: 1.0,
-                                      decoration: BoxDecoration(
-                                        color: FlutterFlowTheme.of(context)
-                                            .white,
+                                    SizedBox(height: 4.0),
+                                    Padding(
+                                      padding: EdgeInsetsDirectional.fromSTEB(20.0, 0.0, 0.0, 8.0),
+                                      child: Align(
+                                        alignment: AlignmentDirectional(-1.0, 0.0),
+                                        child: RichText(
+                                          textScaler: MediaQuery.of(context).textScaler,
+                                          text: TextSpan(
+                                            children: [
+                                              TextSpan(
+                                                text: 'Question ',
+                                                style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                                      fontFamily: 'Roboto',
+                                                      fontSize: 20.0,
+                                                      letterSpacing: 0.0,
+                                                      fontWeight: FontWeight.bold,
+                                                      useGoogleFonts: false,
+                                                      lineHeight: 1.5,
+                                                    ),
+                                              ),
+                                              TextSpan(
+                                                text: (_model.pageViewCurrentIndex + 1).toString(),
+                                                style: TextStyle(),
+                                              ),
+                                              TextSpan(
+                                                text: ' of ',
+                                                style: TextStyle(),
+                                              ),
+                                              TextSpan(
+                                                text: QuizGroup.getquestionsbyquizidApiCall.questionDetailsList(
+                                                  (_model.quizRes?.jsonBody ?? ''),
+                                                )!.length.toString(),
+                                                style: TextStyle(),
+                                              )
+                                            ],
+                                            style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                                  fontFamily: 'Roboto',
+                                                  fontSize: 20.0,
+                                                  letterSpacing: 0.0,
+                                                  fontWeight: FontWeight.bold,
+                                                  useGoogleFonts: false,
+                                                  lineHeight: 1.5,
+                                                ),
+                                          ),
+                                        ),
                                       ),
                                     ),
+                                    if (timerStatus == 1)
+                                      Padding(
+                                        padding: EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Expanded(
+                                              child: Padding(
+                                                padding: EdgeInsetsDirectional.fromSTEB(0.0, 15.0, 0.0, 0.0),
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    borderRadius: BorderRadius.circular(15.0),
+                                                  ),
+                                                  child: custom_widgets.LinearBarTimer(
+                                                    width: 309.0,
+                                                    height: 10.0,
+                                                    time: quizDurationMinutes * 60 * 1000,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            Container(
+                                              width: 100.0,
+                                              height: 34.0,
+                                              decoration: BoxDecoration(
+                                                color: FlutterFlowTheme.of(context).primary,
+                                                borderRadius: BorderRadius.circular(20.0),
+                                              ),
+                                              alignment: AlignmentDirectional(0.0, 0.0),
+                                              child: FlutterFlowTimer(
+                                                initialTime: quizDurationMinutes * 60 * 1000,
+                                                getDisplayTime: (value) => StopWatchTimer.getDisplayTime(
+                                                  value,
+                                                  hours: false,
+                                                  milliSecond: false,
+                                                ),
+                                                controller: _model.timerController,
+                                                updateStateInterval: Duration(milliseconds: 1000),
+                                                onChanged: (value, displayTime, shouldUpdate) {
+                                                  _model.timerMilliseconds = value;
+                                                  _model.timerValue = displayTime;
+                                                  if (shouldUpdate) safeSetState(() {});
+                                                },
+                                                textAlign: TextAlign.center,
+                                                style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                                  fontFamily: 'Roboto',
+                                                  color: Colors.white,
+                                                  fontSize: 16.0,
+                                                  useGoogleFonts: false,
+                                                ),
+                                                onEnded: () async {
+                                                  await showDialog(
+                                                    barrierDismissible: false,
+                                                    context: context,
+                                                    builder: (dialogContext) {
+                                                      return Dialog(
+                                                        elevation: 0,
+                                                        insetPadding: EdgeInsets.zero,
+                                                        backgroundColor: Colors.transparent,
+                                                        alignment: AlignmentDirectional(0.0, 0.0).resolve(Directionality.of(context)),
+                                                        child: GestureDetector(
+                                                          onTap: () {
+                                                            FocusScope.of(dialogContext).unfocus();
+                                                            FocusManager.instance.primaryFocus?.unfocus();
+                                                          },
+                                                          child: TimeoutDialogWidget(
+                                                            istimeout: () async {
+                                                              FFAppState().clearCoinsCache();
+                                                              context.pushNamed(
+                                                                QuizResultWidget.routeName,
+                                                                queryParameters: {
+                                                                  'correctAnswer': serializeParam(FFAppState().correctQues, ParamType.int),
+                                                                  'wrongAnswer': serializeParam(FFAppState().wrongQues, ParamType.int),
+                                                                  'totalQuestion': serializeParam(questions is List ? questions.length : 0, ParamType.int),
+                                                                  'notAnswer': serializeParam(FFAppState().notAnswerQues, ParamType.int),
+                                                                  'quizID': serializeParam(widget.quizID, ParamType.String),
+                                                                  'title': serializeParam(widget.title, ParamType.String),
+                                                                  'correctAnsReward': serializeParam(correctAnsReward, ParamType.double),
+                                                                  'penaltyPerQuestion': serializeParam(penaltyPerQuestion, ParamType.double),
+                                                                }.withoutNulls,
+                                                              );
+                                                            },
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          ].divide(SizedBox(width: 16.0)),
+                                        ),
+                                      ),
                                   ],
                                 ),
                               ),
@@ -261,279 +452,6 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                     Column(
                                       mainAxisSize: MainAxisSize.max,
                                       children: [
-                                        Align(
-                                          alignment:
-                                              AlignmentDirectional(-1.0, 0.0),
-                                          child: Padding(
-                                            padding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    20.0, 24.0, 0.0, 12.0),
-                                            child: RichText(
-                                              textScaler: MediaQuery.of(context)
-                                                  .textScaler,
-                                              text: TextSpan(
-                                                children: [
-                                                  TextSpan(
-                                                    text: 'Question ',
-                                                    style: FlutterFlowTheme.of(
-                                                            context)
-                                                        .bodyMedium
-                                                        .override(
-                                                          fontFamily: 'Roboto',
-                                                          fontSize: 20.0,
-                                                          letterSpacing: 0.0,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          useGoogleFonts: false,
-                                                          lineHeight: 1.5,
-                                                        ),
-                                                  ),
-                                                  TextSpan(
-                                                    text:
-                                                        (_model.pageViewCurrentIndex +
-                                                                1)
-                                                            .toString(),
-                                                    style: TextStyle(),
-                                                  ),
-                                                  TextSpan(
-                                                    text: ' of ',
-                                                    style: TextStyle(),
-                                                  ),
-                                                  TextSpan(
-                                                    text: QuizGroup
-                                                        .getquestionsbyquizidApiCall
-                                                        .questionDetailsList(
-                                                          (_model.quizRes
-                                                                  ?.jsonBody ??
-                                                              ''),
-                                                        )!
-                                                        .length
-                                                        .toString(),
-                                                    style: TextStyle(),
-                                                  )
-                                                ],
-                                                style:
-                                                    FlutterFlowTheme.of(context)
-                                                        .bodyMedium
-                                                        .override(
-                                                          fontFamily: 'Roboto',
-                                                          fontSize: 20.0,
-                                                          letterSpacing: 0.0,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          useGoogleFonts: false,
-                                                          lineHeight: 1.5,
-                                                        ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        if (widget.timerStatus == 1)
-                                          Padding(
-                                            padding:
-                                                EdgeInsetsDirectional.fromSTEB(
-                                                    16.0, 0.0, 16.0, 0.0),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(0.0, 15.0,
-                                                                0.0, 0.0),
-                                                    child: Container(
-                                                      decoration: BoxDecoration(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(15.0),
-                                                      ),
-                                                      child: custom_widgets
-                                                          .LinearBarTimer(
-                                                        width: 309.0,
-                                                        height: 10.0,
-                                                        time: (int.tryParse(widget.quizTime ?? '0') ?? 0) *
-                                                            60 *
-                                                            1000,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                Container(
-                                                  width: 100.0,
-                                                  height: 34.0,
-                                                  decoration: BoxDecoration(
-                                                    color: FlutterFlowTheme.of(
-                                                            context)
-                                                        .primary,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            20.0),
-                                                  ),
-                                                  alignment:
-                                                      AlignmentDirectional(
-                                                          0.0, 0.0),
-                                                  child: Builder(
-                                                    builder: (context) =>
-                                                        FlutterFlowTimer(
-                                                      initialTime:
-                                                          (int.tryParse(widget.quizTime ?? '0') ?? 0) *
-                                                              60 *
-                                                              1000,
-                                                      getDisplayTime: (value) =>
-                                                          StopWatchTimer
-                                                              .getDisplayTime(
-                                                        value,
-                                                        hours: false,
-                                                        milliSecond: false,
-                                                      ),
-                                                      controller: _model
-                                                          .timerController,
-                                                      updateStateInterval:
-                                                          Duration(
-                                                              milliseconds:
-                                                                  1000),
-                                                      onChanged: (value,
-                                                          displayTime,
-                                                          shouldUpdate) {
-                                                        _model.timerMilliseconds =
-                                                            value;
-                                                        _model.timerValue =
-                                                            displayTime;
-                                                        if (shouldUpdate)
-                                                          safeSetState(() {});
-                                                      },
-                                                      textAlign: TextAlign.center,
-                                                      style: FlutterFlowTheme.of(context)
-                                                          .bodyMedium
-                                                          .override(
-                                                            fontFamily: 'Roboto',
-                                                            color: Colors.white,
-                                                            fontSize: 16.0,
-                                                            useGoogleFonts: false,
-                                                          ),
-                                                      onEnded: () async {
-                                                        await showDialog(
-                                                          barrierDismissible:
-                                                              false,
-                                                          context: context,
-                                                          builder:
-                                                              (dialogContext) {
-                                                            return Dialog(
-                                                              elevation: 0,
-                                                              insetPadding:
-                                                                  EdgeInsets
-                                                                      .zero,
-                                                              backgroundColor:
-                                                                  Colors
-                                                                      .transparent,
-                                                              alignment: AlignmentDirectional(
-                                                                      0.0, 0.0)
-                                                                  .resolve(
-                                                                      Directionality.of(
-                                                                          context)),
-                                                              child:
-                                                                  GestureDetector(
-                                                                onTap: () {
-                                                                  FocusScope.of(dialogContext)
-                                                                      .unfocus();
-                                                                  FocusManager
-                                                                      .instance
-                                                                      .primaryFocus
-                                                                      ?.unfocus();
-                                                                },
-                                                                child:
-                                                                    TimeoutDialogWidget(
-                                                                  istimeout:
-                                                                      () async {
-                                                                    FFAppState()
-                                                                        .clearCoinsCache();
-
-                                                                    context
-                                                                        .pushNamed(
-                                                                      QuizResultWidget
-                                                                          .routeName,
-                                                                      queryParameters:
-                                                                          {
-                                                                        'correctAnswer':
-                                                                            serializeParam(
-                                                                        FFAppState()
-                                                                            .correctQues,
-                                                                        ParamType
-                                                                            .int,
-                                                                        ),
-                                                                        'wrongAnswer':
-                                                                            serializeParam(
-                                                                        FFAppState()
-                                                                            .wrongQues,
-                                                                        ParamType
-                                                                            .int,
-                                                                        ),
-                                                                        'totalQuestion':
-                                                                            serializeParam(
-                                                                        QuizGroup
-                                                                            .getquestionsbyquizidApiCall
-                                                                            .questionDetailsList(
-                                                                              (_model.quizRes?.jsonBody ?? ''),
-                                                                            )
-                                                                            ?.length,
-                                                                        ParamType
-                                                                            .int,
-                                                                        ),
-                                                                        'notAnswer':
-                                                                            serializeParam(
-                                                                        FFAppState()
-                                                                            .notAnswerQues,
-                                                                        ParamType
-                                                                            .int,
-                                                                        ),
-                                                                        'quizID':
-                                                                            serializeParam(
-                                                                        FFAppState()
-                                                                            .quizID,
-                                                                        ParamType
-                                                                            .String,
-                                                                        ),
-                                                                        'title':
-                                                                            serializeParam(
-                                                                        widget
-                                                                            .title,
-                                                                        ParamType
-                                                                            .String,
-                                                                        ),
-                                                                        'correctAnsReward':
-                                                                            serializeParam(
-                                                                        widget
-                                                                            .correctAnsReward,
-                                                                        ParamType
-                                                                            .double,
-                                                                        ),
-                                                                        'penaltyPerQuestion':
-                                                                            serializeParam(
-                                                                        widget
-                                                                            .penaltyPerQuestion,
-                                                                        ParamType
-                                                                            .double,
-                                                                        ),
-                                                                      }.withoutNulls,
-                                                                    );
-                                                                  },
-                                                                ),
-                                                              ),
-                                                            );
-                                                          },
-                                                        );
-                                                      },
-                                                    ),
-                                                  ),
-                                                ),
-                                              ].divide(SizedBox(width: 16.0)),
-                                            ),
-                                          ),
                                         Expanded(
                                           child: SingleChildScrollView(
                                             primary: false,
@@ -1914,12 +1832,12 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                 'totalQuestion': serializeParam(totalQuestions, ParamType.int),
                                                                 'notAnswer': serializeParam(FFAppState().notAnswerQues, ParamType.int),
                                                                 'quizID': serializeParam(widget.quizID, ParamType.String),
-                                                                'quizTime': serializeParam(widget.quizTime, ParamType.String),
+                                                                'quizTime': serializeParam(quizDurationMinutes.toString(), ParamType.String),
                                                                 'catID': serializeParam(widget.catId, ParamType.String),
                                                                 'title': serializeParam(widget.title, ParamType.String),
                                                                 'image': serializeParam(widget.image, ParamType.String),
-                                                                'correctAnsReward': serializeParam(widget.correctAnsReward, ParamType.double),
-                                                                'penaltyPerQuestion': serializeParam(widget.penaltyPerQuestion, ParamType.double),
+                                                                'correctAnsReward': serializeParam(correctAnsReward, ParamType.double),
+                                                                'penaltyPerQuestion': serializeParam(penaltyPerQuestion, ParamType.double),
                                                               }.withoutNulls,
                                                             );
                                                           } else {
