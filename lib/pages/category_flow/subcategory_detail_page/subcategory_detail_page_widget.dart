@@ -51,6 +51,9 @@ class _SubcategoryDetailPageWidgetState extends State<SubcategoryDetailPageWidge
             separatorBuilder: (_, __) => SizedBox(height: 16),
             itemBuilder: (context, index) {
               final quiz = quizzes[index];
+              // DEBUG: Print the quiz object and its keys
+              print('Quiz object at index $index: $quiz');
+              print('Quiz keys: ${quiz.keys.toList()}');
               return Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -77,10 +80,6 @@ class _SubcategoryDetailPageWidgetState extends State<SubcategoryDetailPageWidge
                     SizedBox(height: 8),
                     Row(
                       children: [
-                        Text(
-                          '${quiz['total_questions'] ?? ''} Qs',
-                          style: TextStyle(color: Colors.grey[700]),
-                        ),
                         SizedBox(width: 8),
                         Text('.', style: TextStyle(color: Colors.grey[700])),
                         SizedBox(width: 8),
@@ -92,7 +91,7 @@ class _SubcategoryDetailPageWidgetState extends State<SubcategoryDetailPageWidge
                         Text('.', style: TextStyle(color: Colors.grey[700])),
                         SizedBox(width: 8),
                         Text(
-                          '${quiz['marks'] ?? ''} Marks',
+                          '${quiz['minimum_required_points'] ?? 'N/A'} Marks',
                           style: TextStyle(color: Colors.grey[700]),
                         ),
                         Spacer(),

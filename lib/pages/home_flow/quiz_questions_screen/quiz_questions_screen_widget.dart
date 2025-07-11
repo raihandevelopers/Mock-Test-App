@@ -67,21 +67,34 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
   // Track selected option index for each question
   Map<int, int> selectedOptionPerQuestion = {};
 
+  // Add this at the top of the _QuizQuestionsScreenWidgetState class:
+  Map<int, String> userAnswersPerQuestion = {};
+
   @override
   void initState() {
     super.initState();
+    print('QUIZ DEBUG: Widget initState called');
     _model = createModel(context, () => QuizQuestionsScreenModel());
     _translation = Translation(apiKey: 'AIzaSyCsrdktiTiJHrsd9n3EZ323XksrqVBIUzw'); // <-- Replace with your API key
 
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
+      print('QUIZ DEBUG: PostFrameCallback triggered');
+      print('QUIZ DEBUG: widget.quizID = ' + (widget.quizID?.toString() ?? 'null'));
+      print('QUIZ DEBUG: FFAppState().loginToken = ' + (FFAppState().loginToken?.toString() ?? 'null'));
       FFAppState().quesIndex = _model.pageViewCurrentIndex + 1;
       safeSetState(() {});
+      try {
+        print('QUIZ DEBUG: About to call API');
       _model.quizRes = await QuizGroup.getquestionsbyquizidApiCall.call(
         quizId: widget.quizID,
         token: FFAppState().loginToken,
       );
-
+        print('QUIZ DEBUG: API call completed');
+        print('QUIZ DEBUG: Received quiz object: ' + (_model.quizRes?.jsonBody ?? '').toString());
+      } catch (e) {
+        print('QUIZ DEBUG: API call failed: ' + e.toString());
+      }
       FFAppState().questionType = getJsonField(
         (_model.quizRes?.jsonBody ?? ''),
         r'''$.question_type''',
@@ -93,8 +106,6 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
       _model.timerController.onResetTimer();
 
       _model.timerController.onStartTimer();
-
-      print('QUIZ DEBUG: Received quiz object: ' + (_model.quizRes?.jsonBody ?? '').toString());
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
@@ -129,6 +140,7 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
 
   @override
   Widget build(BuildContext context) {
+    print('QUIZ DEBUG: build called');
     context.watch<FFAppState>();
 
     // Extract correctAnsReward and penaltyPerQuestion from API response if available
@@ -257,46 +269,29 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     Padding(
-                                      padding: EdgeInsetsDirectional.fromSTEB(
-                                          16.0, 0.0, 16.0, 8.0),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.max,
+                                      padding: EdgeInsetsDirectional.fromSTEB(0, 24.0, 0, 0),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.stretch,
                                         children: [
-                                          Expanded(
-                                            child: Align(
-                                              alignment: AlignmentDirectional(-1.0, 0.0),
-                                              child: RichText(
-                                                textScaler:
-                                                    MediaQuery.of(context)
-                                                        .textScaler,
-                                                text: TextSpan(
-                                                  children: [
-                                                    TextSpan(
-                                                      text: valueOrDefault<
-                                                          String>(
-                                                        widget.title,
-                                                        'title',
-                                                      ),
-                                                      style: TextStyle(),
-                                                    )
-                                                  ],
-                                                  style: FlutterFlowTheme.of(
-                                                          context)
-                                                      .bodyMedium
-                                                      .override(
-                                                        fontFamily: 'Roboto',
-                                                        fontSize: 22.0,
-                                                        letterSpacing: 0.0,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        useGoogleFonts: false,
-                                                        lineHeight: 1.5,
-                                                      ),
-                                                ),
-                                                maxLines: 2,
-                                                textAlign: TextAlign.left,
+                                          Center(
+                                            child: Text(
+                                              valueOrDefault<String>(widget.title, 'title'),
+                                              style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                                fontFamily: 'Roboto',
+                                                fontSize: 24.0,
+                                                fontWeight: FontWeight.bold,
+                                                useGoogleFonts: false,
+                                                lineHeight: 1.5,
                                               ),
+                                              textAlign: TextAlign.center,
+                                              maxLines: 2,
                                             ),
+                                          ),
+                                          SizedBox(height: 8.0),
+                                          Container(
+                                            width: double.infinity,
+                                            height: 1.0,
+                                            color: Color(0xFFE0E0E0), // light gray
                                           ),
                                         ],
                                       ),
@@ -306,115 +301,115 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                       padding: EdgeInsetsDirectional.fromSTEB(20.0, 0.0, 0.0, 8.0),
                                       child: Align(
                                         alignment: AlignmentDirectional(-1.0, 0.0),
-                                        child: RichText(
+                                            child: RichText(
                                           textScaler: MediaQuery.of(context).textScaler,
-                                          text: TextSpan(
-                                            children: [
-                                              TextSpan(
-                                                text: 'Question ',
+                                              text: TextSpan(
+                                                children: [
+                                                  TextSpan(
+                                                    text: 'Question ',
                                                 style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                      fontFamily: 'Roboto',
-                                                      fontSize: 20.0,
-                                                      letterSpacing: 0.0,
+                                                          fontFamily: 'Roboto',
+                                                          fontSize: 20.0,
+                                                          letterSpacing: 0.0,
                                                       fontWeight: FontWeight.bold,
-                                                      useGoogleFonts: false,
-                                                      lineHeight: 1.5,
-                                                    ),
-                                              ),
-                                              TextSpan(
+                                                          useGoogleFonts: false,
+                                                          lineHeight: 1.5,
+                                                        ),
+                                                  ),
+                                                  TextSpan(
                                                 text: (_model.pageViewCurrentIndex + 1).toString(),
-                                                style: TextStyle(),
-                                              ),
-                                              TextSpan(
-                                                text: ' of ',
-                                                style: TextStyle(),
-                                              ),
-                                              TextSpan(
+                                                    style: TextStyle(),
+                                                  ),
+                                                  TextSpan(
+                                                    text: ' of ',
+                                                    style: TextStyle(),
+                                                  ),
+                                                  TextSpan(
                                                 text: QuizGroup.getquestionsbyquizidApiCall.questionDetailsList(
                                                   (_model.quizRes?.jsonBody ?? ''),
                                                 )!.length.toString(),
-                                                style: TextStyle(),
-                                              )
-                                            ],
+                                                    style: TextStyle(),
+                                                  )
+                                                ],
                                             style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                  fontFamily: 'Roboto',
-                                                  fontSize: 20.0,
-                                                  letterSpacing: 0.0,
+                                                          fontFamily: 'Roboto',
+                                                          fontSize: 20.0,
+                                                          letterSpacing: 0.0,
                                                   fontWeight: FontWeight.bold,
-                                                  useGoogleFonts: false,
-                                                  lineHeight: 1.5,
-                                                ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    if (timerStatus == 1)
-                                      Padding(
-                                        padding: EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Expanded(
-                                              child: Padding(
-                                                padding: EdgeInsetsDirectional.fromSTEB(0.0, 15.0, 0.0, 0.0),
-                                                child: Container(
-                                                  decoration: BoxDecoration(
-                                                    borderRadius: BorderRadius.circular(15.0),
-                                                  ),
-                                                  child: custom_widgets.LinearBarTimer(
-                                                    width: 309.0,
-                                                    height: 10.0,
-                                                    time: quizDurationMinutes * 60 * 1000,
-                                                  ),
-                                                ),
+                                                          useGoogleFonts: false,
+                                                          lineHeight: 1.5,
+                                                        ),
                                               ),
                                             ),
-                                            Container(
-                                              width: 100.0,
-                                              height: 34.0,
-                                              decoration: BoxDecoration(
+                                          ),
+                                        ),
+                                    if (timerStatus == 1)
+                                          Padding(
+                                        padding: EdgeInsetsDirectional.fromSTEB(16.0, 0.0, 16.0, 0.0),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Expanded(
+                                                  child: Padding(
+                                                padding: EdgeInsetsDirectional.fromSTEB(0.0, 15.0, 0.0, 0.0),
+                                                    child: Container(
+                                                      decoration: BoxDecoration(
+                                                    borderRadius: BorderRadius.circular(15.0),
+                                                      ),
+                                                  child: custom_widgets.LinearBarTimer(
+                                                        width: 309.0,
+                                                        height: 10.0,
+                                                    time: quizDurationMinutes * 60 * 1000,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Container(
+                                                  width: 100.0,
+                                                  height: 34.0,
+                                                  decoration: BoxDecoration(
                                                 color: FlutterFlowTheme.of(context).primary,
                                                 borderRadius: BorderRadius.circular(20.0),
-                                              ),
+                                                  ),
                                               alignment: AlignmentDirectional(0.0, 0.0),
                                               child: FlutterFlowTimer(
                                                 initialTime: quizDurationMinutes * 60 * 1000,
                                                 getDisplayTime: (value) => StopWatchTimer.getDisplayTime(
-                                                  value,
-                                                  hours: false,
-                                                  milliSecond: false,
-                                                ),
+                                                        value,
+                                                        hours: false,
+                                                        milliSecond: false,
+                                                      ),
                                                 controller: _model.timerController,
                                                 updateStateInterval: Duration(milliseconds: 1000),
                                                 onChanged: (value, displayTime, shouldUpdate) {
                                                   _model.timerMilliseconds = value;
                                                   _model.timerValue = displayTime;
                                                   if (shouldUpdate) safeSetState(() {});
-                                                },
-                                                textAlign: TextAlign.center,
+                                                      },
+                                                      textAlign: TextAlign.center,
                                                 style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                  fontFamily: 'Roboto',
-                                                  color: Colors.white,
-                                                  fontSize: 16.0,
-                                                  useGoogleFonts: false,
-                                                ),
-                                                onEnded: () async {
-                                                  await showDialog(
+                                                            fontFamily: 'Roboto',
+                                                            color: Colors.white,
+                                                            fontSize: 16.0,
+                                                            useGoogleFonts: false,
+                                                          ),
+                                                      onEnded: () async {
+                                                        await showDialog(
                                                     barrierDismissible: false,
-                                                    context: context,
+                                                          context: context,
                                                     builder: (dialogContext) {
-                                                      return Dialog(
-                                                        elevation: 0,
+                                                            return Dialog(
+                                                              elevation: 0,
                                                         insetPadding: EdgeInsets.zero,
                                                         backgroundColor: Colors.transparent,
                                                         alignment: AlignmentDirectional(0.0, 0.0).resolve(Directionality.of(context)),
                                                         child: GestureDetector(
-                                                          onTap: () {
+                                                                onTap: () {
                                                             FocusScope.of(dialogContext).unfocus();
                                                             FocusManager.instance.primaryFocus?.unfocus();
-                                                          },
+                                                                },
                                                           child: TimeoutDialogWidget(
                                                             istimeout: () async {
                                                               FFAppState().clearCoinsCache();
@@ -429,20 +424,27 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                   'title': serializeParam(widget.title, ParamType.String),
                                                                   'correctAnsReward': serializeParam(correctAnsReward, ParamType.double),
                                                                   'penaltyPerQuestion': serializeParam(penaltyPerQuestion, ParamType.double),
-                                                                }.withoutNulls,
-                                                              );
-                                                            },
-                                                          ),
-                                                        ),
-                                                      );
-                                                    },
-                                                  );
-                                                },
-                                              ),
+                                                                      }.withoutNulls,
+                                                                    );
+                                                                  },
+                                                                ),
+                                                              ),
+                                                            );
+                                                          },
+                                                        );
+                                                      },
+                                                  ),
+                                                ),
+                                              ].divide(SizedBox(width: 16.0)),
                                             ),
-                                          ].divide(SizedBox(width: 16.0)),
-                                        ),
-                                      ),
+                                          ),
+                                          // Separator line below timer
+                                          SizedBox(height: 16.0),
+                                          Container(
+                                            width: double.infinity,
+                                            height: 1.0,
+                                            color: Color(0xFFE0E0E0), // light gray
+                                          ),
                                   ],
                                 ),
                               ),
@@ -620,22 +622,17 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                 highlightColor: Colors.transparent,
                                                                                 onTap: () async {
                                                                                   if (selectedIndex == 0) {
-                                                                                    // Deselect if already selected
                                                                                     _model.userAnswer = null;
                                                                                     _model.actualAnswer = null;
                                                                                     selectedOptionPerQuestion[categorywisequizIndex] = -1;
                                                                                     FFAppState().selectedColorIndex = -1;
+                                                                                    userAnswersPerQuestion[_model.pageViewCurrentIndex] = 'skipped';
                                                                                   } else {
-                                                                                    _model.userAnswer = getJsonField(
-                                                                                      categorywisequizItem,
-                                                                                      r'''$.option.a''',
-                                                                                    ).toString();
-                                                                                    _model.actualAnswer = getJsonField(
-                                                                                      categorywisequizItem,
-                                                                                      r'''$.answer''',
-                                                                                    ).toString();
+                                                                                    _model.userAnswer = getJsonField(categorywisequizItem, r'''$.option.a''').toString();
+                                                                                    _model.actualAnswer = getJsonField(categorywisequizItem, r'''$.answer''').toString();
                                                                                     selectedOptionPerQuestion[categorywisequizIndex] = 0;
                                                                                     FFAppState().selectedColorIndex = 0;
+                                                                                    userAnswersPerQuestion[_model.pageViewCurrentIndex] = _model.userAnswer ?? 'skipped';
                                                                                   }
                                                                                   safeSetState(() {});
                                                                                   FFAppState().update(() {});
@@ -679,22 +676,17 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                 highlightColor: Colors.transparent,
                                                                                 onTap: () async {
                                                                                   if (selectedIndex == 1) {
-                                                                                    // Deselect if already selected
                                                                                     _model.userAnswer = null;
                                                                                     _model.actualAnswer = null;
                                                                                     selectedOptionPerQuestion[categorywisequizIndex] = -1;
                                                                                     FFAppState().selectedColorIndex = -1;
+                                                                                    userAnswersPerQuestion[_model.pageViewCurrentIndex] = 'skipped';
                                                                                   } else {
-                                                                                    _model.userAnswer = getJsonField(
-                                                                                      categorywisequizItem,
-                                                                                      r'''$.option.b''',
-                                                                                    ).toString();
-                                                                                    _model.actualAnswer = getJsonField(
-                                                                                      categorywisequizItem,
-                                                                                      r'''$.answer''',
-                                                                                    ).toString();
+                                                                                    _model.userAnswer = getJsonField(categorywisequizItem, r'''$.option.b''').toString();
+                                                                                    _model.actualAnswer = getJsonField(categorywisequizItem, r'''$.answer''').toString();
                                                                                     selectedOptionPerQuestion[categorywisequizIndex] = 1;
                                                                                     FFAppState().selectedColorIndex = 1;
+                                                                                    userAnswersPerQuestion[_model.pageViewCurrentIndex] = _model.userAnswer ?? 'skipped';
                                                                                   }
                                                                                   safeSetState(() {});
                                                                                   FFAppState().update(() {});
@@ -737,22 +729,17 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                                 highlightColor: Colors.transparent,
                                                                                 onTap: () async {
                                                                                   if (selectedIndex == 2) {
-                                                                                    // Deselect if already selected
                                                                                     _model.userAnswer = null;
                                                                                     _model.actualAnswer = null;
                                                                                     selectedOptionPerQuestion[categorywisequizIndex] = -1;
                                                                                     FFAppState().selectedColorIndex = -1;
+                                                                                    userAnswersPerQuestion[_model.pageViewCurrentIndex] = 'skipped';
                                                                                   } else {
-                                                                                    _model.userAnswer = getJsonField(
-                                                                                      categorywisequizItem,
-                                                                                      r'''$.option.c''',
-                                                                                    ).toString();
-                                                                                    _model.actualAnswer = getJsonField(
-                                                                                      categorywisequizItem,
-                                                                                      r'''$.answer''',
-                                                                                    ).toString();
+                                                                                    _model.userAnswer = getJsonField(categorywisequizItem, r'''$.option.c''').toString();
+                                                                                    _model.actualAnswer = getJsonField(categorywisequizItem, r'''$.answer''').toString();
                                                                                     selectedOptionPerQuestion[categorywisequizIndex] = 2;
                                                                                     FFAppState().selectedColorIndex = 2;
+                                                                                    userAnswersPerQuestion[_model.pageViewCurrentIndex] = _model.userAnswer ?? 'skipped';
                                                                                   }
                                                                                   safeSetState(() {});
                                                                                   FFAppState().update(() {});
@@ -793,22 +780,17 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                               highlightColor: Colors.transparent,
                                                                               onTap: () async {
                                                                                 if (selectedIndex == 3) {
-                                                                                  // Deselect if already selected
                                                                                   _model.userAnswer = null;
                                                                                   _model.actualAnswer = null;
                                                                                   selectedOptionPerQuestion[categorywisequizIndex] = -1;
                                                                                   FFAppState().selectedColorIndex = -1;
+                                                                                  userAnswersPerQuestion[_model.pageViewCurrentIndex] = 'skipped';
                                                                                 } else {
-                                                                                  _model.userAnswer = getJsonField(
-                                                                                    categorywisequizItem,
-                                                                                    r'''$.option.d''',
-                                                                                  ).toString();
-                                                                                  _model.actualAnswer = getJsonField(
-                                                                                    categorywisequizItem,
-                                                                                    r'''$.answer''',
-                                                                                  ).toString();
+                                                                                  _model.userAnswer = getJsonField(categorywisequizItem, r'''$.option.d''').toString();
+                                                                                  _model.actualAnswer = getJsonField(categorywisequizItem, r'''$.answer''').toString();
                                                                                   selectedOptionPerQuestion[categorywisequizIndex] = 3;
                                                                                   FFAppState().selectedColorIndex = 3;
+                                                                                  userAnswersPerQuestion[_model.pageViewCurrentIndex] = _model.userAnswer ?? 'skipped';
                                                                                 }
                                                                                 safeSetState(() {});
                                                                                 FFAppState().update(() {});
@@ -1855,9 +1837,7 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
 
                                                           // Inside the Save & Next button logic, after processing the answer:
                                                           if (_model.userAnswer != null && _model.userAnswer != '') {
-                                                            final userAnswer = (_model.userAnswer != null && _model.userAnswer.toString().trim().isNotEmpty)
-                                                                ? _model.userAnswer.toString()
-                                                                : 'skipped';
+                                                            final userAnswer = userAnswersPerQuestion[_model.pageViewCurrentIndex] ?? 'skipped';
                                                             FFAppState().addToQuesList({
                                                               'question_title': getJsonField(
                                                                 QuizGroup.getquestionsbyquizidApiCall.questionDetailsList((_model.quizRes?.jsonBody ?? ''))?.elementAtOrNull(_model.pageViewCurrentIndex),
@@ -1924,6 +1904,28 @@ class _QuizQuestionsScreenWidgetState extends State<QuizQuestionsScreenWidget> {
                                                                         ),
                                                             });
                                                           }
+
+                                                          // Update FFAppState().quesList for ALL questions
+                                                          FFAppState().quesList = [];
+                                                          for (int i = 0; i < totalQuestions; i++) {
+                                                            final q = QuizGroup.getquestionsbyquizidApiCall.questionDetailsList((_model.quizRes?.jsonBody ?? ''))?.elementAtOrNull(i);
+                                                            final userAnswer = userAnswersPerQuestion[i] ?? 'skipped';
+                                                            FFAppState().quesList.add({
+                                                              'question_title': getJsonField(q, r'''$.question_title'''),
+                                                              'image': getJsonField(q, r'''$.image'''),
+                                                              'audio': getJsonField(q, r'''$.audio'''),
+                                                              'question_type': getJsonField(q, r'''$.question_type'''),
+                                                              'option': getJsonField(q, r'''$.option'''),
+                                                              'answer': getJsonField(q, r'''$.answer'''),
+                                                              'user_answer': userAnswer,
+                                                              'description': getJsonField(q, r'''$.description'''),
+                                                            });
+                                                            print('QUIZ DEBUG: quesList[$i] = user_answer: $userAnswer');
+                                                          }
+
+                                                          // Update FFAppState().quesReviewList
+                                                          FFAppState().quesReviewList = FFAppState().quesList.toList();
+                                                          print('QUIZ DEBUG: quesReviewList = $FFAppState().quesReviewList');
                                                         },
                                                         text: ((QuizGroup.getquestionsbyquizidApiCall.questionDetailsList((_model.quizRes?.jsonBody ?? ''))?.length ?? 0) == (_model.pageViewCurrentIndex + 1)) ? 'Submit' : 'Save & Next',
                                                         options: FFButtonOptions(

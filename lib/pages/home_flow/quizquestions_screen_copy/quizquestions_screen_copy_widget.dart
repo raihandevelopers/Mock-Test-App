@@ -612,8 +612,8 @@ class _QuizquestionsScreenCopyWidgetState
                                   ),
                                 ),
                               ].divide(SizedBox(width: 16.0)),
-                            ),
                           ),
+                        ),
                       ],
                     ),
                   ),
@@ -1541,8 +1541,8 @@ class _QuizquestionsScreenCopyWidgetState
                                                                             (_model.quizRes?.jsonBody ?? ''),
                                                                           )
                                                                           ?.length,
-                                                                            ParamType
-                                                                            .int,
+                                                                      ParamType
+                                                                          .int,
                                                                     ),
                                                                     'notAnswer':
                                                                         serializeParam(
@@ -1633,7 +1633,7 @@ class _QuizquestionsScreenCopyWidgetState
                                                       )!
                                                       .elementAtOrNull(
                                                           _model.pageViewCurrentIndex +
-                                                              1))!);
+                                                          1))!);
                                                   safeSetState(() {});
                                                   _model.userAnswer = null;
                                                   _model.actualAnswer = null;
@@ -1799,7 +1799,7 @@ class _QuizquestionsScreenCopyWidgetState
                                                                               (_model.quizRes?.jsonBody ?? ''),
                                                                             )
                                                                             ?.length,
-                                                                            ParamType
+                                                                        ParamType
                                                                             .int,
                                                                       ),
                                                                       'notAnswer':
@@ -1888,7 +1888,7 @@ class _QuizquestionsScreenCopyWidgetState
                                                         .questionTypeList(
                                                           (_model.quizRes
                                                                   ?.jsonBody ??
-                                                                  ''),
+                                                              ''),
                                                         )!
                                                         .elementAtOrNull(
                                                             _model.pageViewCurrentIndex +

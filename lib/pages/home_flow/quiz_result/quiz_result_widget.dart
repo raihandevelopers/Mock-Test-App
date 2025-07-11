@@ -65,6 +65,10 @@ class _QuizResultWidgetState extends State<QuizResultWidget> {
     print('RESULT DEBUG: penaltyPerQuestion=' + (widget.penaltyPerQuestion?.toString() ?? 'null'));
     print('RESULT DEBUG: Calculated score=' + (((widget.correctAnswer ?? 0) * (widget.correctAnsReward ?? 0.0)) - ((widget.wrongAnswer ?? 0) * (widget.penaltyPerQuestion ?? 0.0))).toString());
 
+    // LOG SKIPPED QUESTIONS
+    final skippedCount = FFAppState().quesList.where((q) => (q['user_answer'] == 'skipped')).length;
+    print('RESULT DEBUG: Skipped questions count = ' + skippedCount.toString());
+
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
       _model.startquizres = await QuizGroup.startquizApiCall.call(
@@ -789,9 +793,11 @@ class _QuizResultWidgetState extends State<QuizResultWidget> {
                                                                   child: Text(
                                                                     valueOrDefault<
                                                                         String>(
-                                                                      widget
-                                                                          .notAnswer
-                                                                          ?.toString(),
+                                                                      FFAppState()
+                                                                          .quesList
+                                                                          .where((q) => (q['user_answer'] == 'skipped'))
+                                                                          .length
+                                                                          .toString(),
                                                                       ' 1',
                                                                     ),
                                                                     style: FlutterFlowTheme.of(
@@ -947,10 +953,7 @@ class _QuizResultWidgetState extends State<QuizResultWidget> {
                                                         0.0, 0.0, 8.0, 0.0),
                                                 child: FFButtonWidget(
                                                   onPressed: () async {
-                                                    final reviewList = QuizGroup.startquizApiCall.questionDetailsList(
-                                                      (_model.startquizres?.jsonBody ?? ''),
-                                                    );
-                                                    FFAppState().quesReviewList = (reviewList ?? []).toList().cast<dynamic>();
+                                                    FFAppState().quesReviewList = FFAppState().quesList.toList();
                                                     // Add debug logging
                                                     print('DEBUG: quesReviewList = '
                                                         '${FFAppState().quesReviewList}');

@@ -120,7 +120,7 @@ class _QuizReviewScreenWidgetState extends State<QuizReviewScreenWidget>
                               Builder(
                                 builder: (context) {
                                   final ques =
-                                      FFAppState().quesReviewList.toList();
+                                      FFAppState().quesReviewList.where((q) => q['user_answer'] != null && q['user_answer'] != 'skipped').toList();
 
                                   return ListView.separated(
                                     padding: EdgeInsets.fromLTRB(
@@ -137,6 +137,7 @@ class _QuizReviewScreenWidgetState extends State<QuizReviewScreenWidget>
                                         SizedBox(height: 16.0),
                                     itemBuilder: (context, quesIndex) {
                                       final quesItem = ques[quesIndex];
+                                      print('REVIEW DEBUG: user_answer=' + (quesItem['user_answer']?.toString() ?? 'null') + ', answer=' + (quesItem['answer']?.toString() ?? 'null') + ', options=' + (quesItem['option']?.toString() ?? 'null'));
                                       return Padding(
                                         padding: EdgeInsetsDirectional.fromSTEB(
                                             16.0, 0.0, 16.0, 0.0),
@@ -209,7 +210,7 @@ class _QuizReviewScreenWidgetState extends State<QuizReviewScreenWidget>
                                                                   fontFamily:
                                                                       'Roboto',
                                                                   fontSize:
-                                                                      20.0,
+                                                                      15.0,
                                                                   letterSpacing:
                                                                       0.0,
                                                                   fontWeight:
@@ -261,7 +262,7 @@ class _QuizReviewScreenWidgetState extends State<QuizReviewScreenWidget>
                                                                       fontFamily:
                                                                           'Roboto',
                                                                       fontSize:
-                                                                          20.0,
+                                                                          15.0,
                                                                       letterSpacing:
                                                                           0.0,
                                                                       fontWeight:
@@ -276,7 +277,6 @@ class _QuizReviewScreenWidgetState extends State<QuizReviewScreenWidget>
                                                               textAlign:
                                                                   TextAlign
                                                                       .start,
-                                                              maxLines: 2,
                                                             ),
                                                           ),
                                                         ),
@@ -1329,8 +1329,8 @@ class _QuizReviewScreenWidgetState extends State<QuizReviewScreenWidget>
                                                                   child: Icon(
                                                                     Icons
                                                                         .cancel_sharp,
-                                                                    color: FlutterFlowTheme.of(
-                                                                            context)
+                                                                      color: FlutterFlowTheme.of(
+                                                                              context)
                                                                         .error,
                                                                     size: 24.0,
                                                                   ),
@@ -1559,7 +1559,7 @@ class _QuizReviewScreenWidgetState extends State<QuizReviewScreenWidget>
                               Builder(
                                 builder: (context) {
                                   final question =
-                                      FFAppState().notAnswerQuestion.toList();
+                                      FFAppState().quesReviewList.where((q) => q['user_answer'] == 'skipped').toList();
 
                                   return ListView.separated(
                                     padding: EdgeInsets.fromLTRB(
@@ -1577,6 +1577,7 @@ class _QuizReviewScreenWidgetState extends State<QuizReviewScreenWidget>
                                     itemBuilder: (context, questionIndex) {
                                       final questionItem =
                                           question[questionIndex];
+                                      print('REVIEW DEBUG: user_answer=' + (questionItem['user_answer']?.toString() ?? 'null') + ', answer=' + (questionItem['answer']?.toString() ?? 'null') + ', options=' + (questionItem['option']?.toString() ?? 'null'));
                                       return Padding(
                                         padding: EdgeInsetsDirectional.fromSTEB(
                                             16.0, 0.0, 16.0, 0.0),
@@ -1649,7 +1650,7 @@ class _QuizReviewScreenWidgetState extends State<QuizReviewScreenWidget>
                                                                   fontFamily:
                                                                       'Roboto',
                                                                   fontSize:
-                                                                      20.0,
+                                                                      15.0,
                                                                   letterSpacing:
                                                                       0.0,
                                                                   fontWeight:
@@ -1701,7 +1702,7 @@ class _QuizReviewScreenWidgetState extends State<QuizReviewScreenWidget>
                                                                       fontFamily:
                                                                           'Roboto',
                                                                       fontSize:
-                                                                          20.0,
+                                                                          15.0,
                                                                       letterSpacing:
                                                                           0.0,
                                                                       fontWeight:
@@ -1716,7 +1717,6 @@ class _QuizReviewScreenWidgetState extends State<QuizReviewScreenWidget>
                                                               textAlign:
                                                                   TextAlign
                                                                       .start,
-                                                              maxLines: 2,
                                                             ),
                                                           ),
                                                         ),
@@ -1891,11 +1891,15 @@ class _QuizReviewScreenWidgetState extends State<QuizReviewScreenWidget>
                                                                             .info,
                                                                         shape: BoxShape
                                                                             .circle,
-                                                                        border:
-                                                                            Border.all(
-                                                                          color:
-                                                                              FlutterFlowTheme.of(context).alternate,
-                                                                        ),
+                                                                      ),
+                                                                      child:
+                                                                          Icon(
+                                                                        Icons
+                                                                            .cancel_sharp,
+                                                                        color: FlutterFlowTheme.of(context)
+                                                                            .error,
+                                                                        size:
+                                                                            24.0,
                                                                       ),
                                                                     );
                                                                   }
@@ -2020,11 +2024,15 @@ class _QuizReviewScreenWidgetState extends State<QuizReviewScreenWidget>
                                                                             .info,
                                                                         shape: BoxShape
                                                                             .circle,
-                                                                        border:
-                                                                            Border.all(
-                                                                          color:
-                                                                              FlutterFlowTheme.of(context).alternate,
-                                                                        ),
+                                                                      ),
+                                                                      child:
+                                                                          Icon(
+                                                                        Icons
+                                                                            .cancel_sharp,
+                                                                        color: FlutterFlowTheme.of(context)
+                                                                            .error,
+                                                                        size:
+                                                                            24.0,
                                                                       ),
                                                                     );
                                                                   }
@@ -2155,11 +2163,15 @@ class _QuizReviewScreenWidgetState extends State<QuizReviewScreenWidget>
                                                                             .info,
                                                                         shape: BoxShape
                                                                             .circle,
-                                                                        border:
-                                                                            Border.all(
-                                                                          color:
-                                                                              FlutterFlowTheme.of(context).alternate,
-                                                                        ),
+                                                                      ),
+                                                                      child:
+                                                                          Icon(
+                                                                        Icons
+                                                                            .cancel_sharp,
+                                                                        color: FlutterFlowTheme.of(context)
+                                                                            .error,
+                                                                        size:
+                                                                            24.0,
                                                                       ),
                                                                     );
                                                                   }
@@ -2284,11 +2296,15 @@ class _QuizReviewScreenWidgetState extends State<QuizReviewScreenWidget>
                                                                             .info,
                                                                         shape: BoxShape
                                                                             .circle,
-                                                                        border:
-                                                                            Border.all(
-                                                                          color:
-                                                                              FlutterFlowTheme.of(context).alternate,
-                                                                        ),
+                                                                      ),
+                                                                      child:
+                                                                          Icon(
+                                                                        Icons
+                                                                            .cancel_sharp,
+                                                                        color: FlutterFlowTheme.of(context)
+                                                                            .error,
+                                                                        size:
+                                                                            24.0,
                                                                       ),
                                                                     );
                                                                   }
@@ -2415,13 +2431,14 @@ class _QuizReviewScreenWidgetState extends State<QuizReviewScreenWidget>
                                                                         .info,
                                                                     shape: BoxShape
                                                                         .circle,
-                                                                    border:
-                                                                        Border
-                                                                            .all(
+                                                                  ),
+                                                                  child: Icon(
+                                                                    Icons
+                                                                        .cancel_sharp,
                                                                       color: FlutterFlowTheme.of(
                                                                               context)
-                                                                          .alternate,
-                                                                    ),
+                                                                        .error,
+                                                                    size: 24.0,
                                                                   ),
                                                                 );
                                                               }
@@ -2557,13 +2574,14 @@ class _QuizReviewScreenWidgetState extends State<QuizReviewScreenWidget>
                                                                         .info,
                                                                     shape: BoxShape
                                                                         .circle,
-                                                                    border:
-                                                                        Border
-                                                                            .all(
+                                                                  ),
+                                                                  child: Icon(
+                                                                    Icons
+                                                                        .cancel_sharp,
                                                                       color: FlutterFlowTheme.of(
                                                                               context)
-                                                                          .alternate,
-                                                                    ),
+                                                                        .error,
+                                                                    size: 24.0,
                                                                   ),
                                                                 );
                                                               }

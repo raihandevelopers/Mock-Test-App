@@ -510,15 +510,15 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget>
                                                                       child: Text(
                                                                         group.displayName,
                                                                         style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                          fontFamily: 'Roboto',
-                                                                          fontSize: 18.0,
-                                                                          fontWeight: FontWeight.w600,
-                                                                          color: FlutterFlowTheme.of(context).primary,
-                                                                          useGoogleFonts: false,
-                                                                          lineHeight: 1.5,
-                                                                        ),
+                                                                              fontFamily: 'Roboto',
+                                                                              fontSize: 18.0,
+                                                                              fontWeight: FontWeight.w600,
+                                                                                color: FlutterFlowTheme.of(context).primary,
+                                                                              useGoogleFonts: false,
+                                                                              lineHeight: 1.5,
+                                                                              ),
+                                                                            ),
                                                                       ),
-                                                                    ),
                                                                     Row(
                                                                       children: [
                                                                         Expanded(
@@ -538,56 +538,56 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget>
                                                                       width: double.infinity,
                                                                       height: 92.0,
                                                                       child: ListView.separated(
-                                                                        scrollDirection: Axis.horizontal,
+                                                                                  scrollDirection: Axis.horizontal,
                                                                         padding: EdgeInsets.only(left: 16.0, right: 16.0),
                                                                         itemCount: group.categories.length,
-                                                                        separatorBuilder: (_, __) => SizedBox(width: 16.0),
-                                                                        itemBuilder: (context, index) {
+                                                                                  separatorBuilder: (_, __) => SizedBox(width: 16.0),
+                                                                                  itemBuilder: (context, index) {
                                                                           final category = group.categories[index];
-                                                                          return InkWell(
-                                                                            splashColor: Colors.transparent,
-                                                                            focusColor: Colors.transparent,
-                                                                            hoverColor: Colors.transparent,
-                                                                            highlightColor: Colors.transparent,
+                                                                                    return InkWell(
+                                                                                      splashColor: Colors.transparent,
+                                                                                      focusColor: Colors.transparent,
+                                                                                      hoverColor: Colors.transparent,
+                                                                                      highlightColor: Colors.transparent,
                                                                             onTap: () {
                                                                               print('Navigating to category: id=${category.id}, name=${category.displayName.isNotEmpty ? category.displayName : category.name}');
-                                                                              Navigator.push(
-                                                                                context,
-                                                                                MaterialPageRoute(
-                                                                                  builder: (context) => CategoryDetailPageWidget(
+                                                                                        Navigator.push(
+                                                                                          context,
+                                                                                          MaterialPageRoute(
+                                                                                            builder: (context) => CategoryDetailPageWidget(
                                                                                     title: category.displayName.isNotEmpty ? category.displayName : category.name,
                                                                                     catId: category.id,
-                                                                                  ),
-                                                                                ),
-                                                                              );
-                                                                            },
-                                                                            child: Container(
+                                                                                            ),
+                                                                                          ),
+                                                                                        );
+                                                                                      },
+                                                                                      child: Container(
                                                                               width: 70.0,
                                                                               height: 70.0,
-                                                                              decoration: BoxDecoration(
+                                                                                        decoration: BoxDecoration(
                                                                                 color: FlutterFlowTheme.of(context).primaryBackground,
-                                                                                borderRadius: BorderRadius.circular(12.0),
-                                                                              ),
-                                                                              child: Column(
-                                                                                mainAxisSize: MainAxisSize.max,
-                                                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                                                children: [
-                                                                                  Container(
+                                                                                          borderRadius: BorderRadius.circular(12.0),
+                                                                                        ),
+                                                                                        child: Column(
+                                                                                          mainAxisSize: MainAxisSize.max,
+                                                                                          mainAxisAlignment: MainAxisAlignment.center,
+                                                                                          children: [
+                                                                                            Container(
                                                                                     width: 40.0,
                                                                                     height: 40.0,
-                                                                                    decoration: BoxDecoration(
+                                                                                              decoration: BoxDecoration(
                                                                                       color: FlutterFlowTheme.of(context).primaryBackground,
                                                                                       borderRadius: BorderRadius.circular(8.0),
-                                                                                    ),
-                                                                                    child: ClipRRect(
+                                                                                              ),
+                                                                                              child: ClipRRect(
                                                                                       borderRadius: BorderRadius.circular(8.0),
-                                                                                      child: CachedNetworkImage(
+                                                                                                child: CachedNetworkImage(
                                                                                         fadeInDuration: Duration(milliseconds: 200),
                                                                                         fadeOutDuration: Duration(milliseconds: 200),
                                                                                         imageUrl: '${FFAppConstants.imageBaseURL}${category.image}',
                                                                                         width: 40.0,
                                                                                         height: 40.0,
-                                                                                        fit: BoxFit.cover,
+                                                                                                  fit: BoxFit.cover,
                                                                                         placeholder: (context, url) => Center(
                                                                                           child: CircularProgressIndicator(
                                                                                             valueColor: AlwaysStoppedAnimation<Color>(
@@ -596,29 +596,29 @@ class _HomeScreenWidgetState extends State<HomeScreenWidget>
                                                                                           ),
                                                                                         ),
                                                                                         errorWidget: (context, url, error) => Icon(Icons.error),
-                                                                                      ),
-                                                                                    ),
-                                                                                  ),
-                                                                                  Padding(
+                                                                                                ),
+                                                                                              ),
+                                                                                            ),
+                                                                                            Padding(
                                                                                     padding: EdgeInsetsDirectional.fromSTEB(0.0, 6.0, 0.0, 0.0),
-                                                                                    child: Text(
+                                                                                              child: Text(
                                                                                       category.displayName.isNotEmpty ? category.displayName : category.name,
-                                                                                      textAlign: TextAlign.center,
-                                                                                      maxLines: 2,
+                                                                                                textAlign: TextAlign.center,
+                                                                                                maxLines: 2,
                                                                                       style: FlutterFlowTheme.of(context).bodyMedium.override(
-                                                                                        fontFamily: 'Roboto',
+                                                                                                      fontFamily: 'Roboto',
                                                                                         fontSize: 12.0,
-                                                                                        letterSpacing: 0.0,
-                                                                                        useGoogleFonts: false,
+                                                                                                      letterSpacing: 0.0,
+                                                                                                      useGoogleFonts: false,
+                                                                                                    ),
+                                                                                              ),
+                                                                                            ),
+                                                                                          ],
+                                                                                        ),
                                                                                       ),
-                                                                                    ),
-                                                                                  ),
-                                                                                ],
-                                                                              ),
+                                                                                    );
+                                                                                  },
                                                                             ),
-                                                                          );
-                                                                        },
-                                                                      ),
                                                                     ),
                                                                   ],
                                                                 );
